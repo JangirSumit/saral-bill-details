@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Saral Bill Details",
+  "version": "1.0",
+  "description": "Automate bill details extraction from Paytm",
+  "permissions": [
+    "activeTab",
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://paytm.com/*"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Saral Bill Details",
+    "default_icon": {
+      "16": "icons/invoice-bill_32.png",
+      "32": "icons/invoice-bill_32.png",
+      "48": "icons/invoice-bill_64.png",
+      "128": "icons/invoice-bill_128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/invoice-bill_32.png",
+    "32": "icons/invoice-bill_32.png",
+    "48": "icons/invoice-bill_64.png",
+    "128": "icons/invoice-bill_128.png",
+    "512": "icons/invoice-bill_512.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://paytm.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

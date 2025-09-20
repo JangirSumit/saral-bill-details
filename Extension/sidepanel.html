@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Saral Bill Details</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="container">
+    <div class="section">
+      <h3>Upload Consumer Data</h3>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+      <div id="fileStatus" class="status"></div>
+    </div>
+
+    <div class="section" id="consumerSection" style="display: none;">
+      <h3>Consumer List</h3>
+      <div id="consumerList" class="consumer-list"></div>
+    </div>
+
+    <div class="section" id="controlSection" style="display: none;">
+      <h3>Process Bills</h3>
+      <div class="controls">
+        <button id="startBtn" class="btn-primary">Start Processing</button>
+        <button id="pauseBtn" class="btn-secondary" disabled>Pause</button>
+        <button id="stopBtn" class="btn-secondary" disabled>Stop</button>
+      </div>
+      <div id="progress" class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="section" id="resultsSection" style="display: none;">
+      <h3>Results</h3>
+      <button id="downloadBtn" class="btn-primary">Download Results</button>
+      <div id="results" class="results"></div>
+    </div>
+  </div>
+  
+  <script src="sidepanel.js"></script>
+</body>
+</html>
