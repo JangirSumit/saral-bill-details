@@ -13,11 +13,60 @@ class BillProcessor {
   }
 
   bindEvents() {
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+      radio.addEventListener('change', this.handleModeChange.bind(this));
+    });
     document.getElementById('fileInput').addEventListener('change', this.handleFileUpload.bind(this));
     document.getElementById('startBtn').addEventListener('click', this.startProcessing.bind(this));
     document.getElementById('pauseBtn').addEventListener('click', this.pauseProcessing.bind(this));
     document.getElementById('stopBtn').addEventListener('click', this.stopProcessing.bind(this));
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
+  }
+
+  handleModeChange(event) {
+    const mode = event.target.value;
+    const singleSection = document.getElementById('singleSection');
+    const bulkSection = document.getElementById('bulkSection');
+    const consumerSection = document.getElementById('consumerSection');
+    
+    if (mode === 'single') {
+      singleSection.style.display = 'block';
+      bulkSection.style.display = 'none';
+      consumerSection.style.display = 'none';
+      this.consumers = [];
+      this.setupSingleMode();
+    } else {
+      singleSection.style.display = 'none';
+      bulkSection.style.display = 'block';
+      consumerSection.style.display = 'none';
+      this.consumers = [];
+    }
+    
+    document.getElementById('controlSection').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+  }
+
+  setupSingleMode() {
+    const consumerInput = document.getElementById('singleConsumerInput');
+    
+    const updateConsumers = () => {
+      const consumerNumber = consumerInput.value.trim();
+      if (consumerNumber) {
+        this.consumers = [{
+          consumerNumber: consumerNumber,
+          name: 'Single Consumer'
+        }];
+        this.displayConsumers();
+        document.getElementById('consumerSection').style.display = 'block';
+        document.getElementById('controlSection').style.display = 'block';
+      } else {
+        this.consumers = [];
+        document.getElementById('consumerSection').style.display = 'none';
+        document.getElementById('controlSection').style.display = 'none';
+      }
+    };
+    
+    consumerInput.addEventListener('input', updateConsumers);
   }
 
   async handleFileUpload(event) {
@@ -49,16 +98,19 @@ class BillProcessor {
   }
 
   parseFile(text, filename) {
-    const isCSV = filename.toLowerCase().endsWith('.csv');
+    if (!filename.toLowerCase().endsWith('.csv')) {
+      throw new Error('Only CSV files are supported');
+    }
+    
     const lines = text.split('\n').filter(line => line.trim());
     
-    if (lines.length < 2) throw new Error('File must have header and data rows');
+    if (lines.length < 2) throw new Error('CSV must have header and data rows');
     
-    const headers = lines[0].split(isCSV ? ',' : '\t').map(h => h.trim());
+    const headers = lines[0].split(',').map(h => h.trim());
     const consumers = [];
     
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(isCSV ? ',' : '\t').map(v => v.trim());
+      const values = lines[i].split(',').map(v => v.trim());
       const consumer = {};
       headers.forEach((header, index) => {
         consumer[header] = values[index] || '';
@@ -128,12 +180,14 @@ class BillProcessor {
     document.getElementById('status').textContent = `Processing consumer ${index + 1} of ${this.consumers.length}`;
     
     try {
+      console.log('Sending message to content script:', consumer);
       // Send message to content script to fill form and get bill details
       const result = await this.sendToContentScript({
         action: 'processBill',
         consumer: consumer
       });
       
+      console.log('Received result:', result);
       this.results.push({
         consumer: consumer,
         success: true,
@@ -144,6 +198,7 @@ class BillProcessor {
       item.querySelector('.status-indicator').textContent = 'Completed';
       
     } catch (error) {
+      console.error('Processing error:', error);
       this.results.push({
         consumer: consumer,
         success: false,
@@ -160,19 +215,29 @@ class BillProcessor {
 
   async sendToContentScript(message) {
     return new Promise((resolve, reject) => {
-      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else if (response && response.success) {
-              resolve(response.data);
-            } else {
-              reject(new Error(response ? response.error : 'Unknown error'));
-            }
-          });
-        } else {
+      chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+        if (!tabs[0]) {
           reject(new Error('No active tab found'));
+          return;
+        }
+        
+        const tab = tabs[0];
+        
+        // Check if tab is on Paytm
+        if (!tab.url || !tab.url.includes('paytm.com')) {
+          reject(new Error('Please navigate to Paytm website'));
+          return;
+        }
+        
+        try {
+          const response = await chrome.tabs.sendMessage(tab.id, message);
+          if (response && response.success) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response ? response.error : 'No response from content script'));
+          }
+        } catch (error) {
+          reject(new Error('Content script not responding. Please refresh the Paytm page.'));
         }
       });
     });
@@ -233,9 +298,10 @@ class BillProcessor {
         item.innerHTML = `
           <strong>${consumerNumber}</strong>
           <div class="result-details">
-            Last Date: ${result.data.lastDate || 'N/A'}<br>
-            Amount: ${result.data.amount || 'N/A'}<br>
-            Status: ${result.data.status || 'N/A'}
+            Name: ${result.data.name || 'N/A'}<br>
+            Due Date: ${result.data.dueDate || 'N/A'}<br>
+            Bill Number: ${result.data.billNumber || 'N/A'}<br>
+            Bill Type: ${result.data.billType || 'N/A'}
           </div>
         `;
       } else {
@@ -304,5 +370,6 @@ class BillProcessor {
 
 // Initialize the processor when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-  new BillProcessor();
+  const processor = new BillProcessor();
+  processor.setupSingleMode(); // Initialize single mode by default
 });

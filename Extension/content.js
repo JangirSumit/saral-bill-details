@@ -4,11 +4,19 @@ class PaytmBillExtractor {
   }
 
   init() {
+    console.log('PaytmBillExtractor initialized');
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      console.log('Message received:', request);
       if (request.action === 'processBill') {
         this.processBill(request.consumer)
-          .then(data => sendResponse({ success: true, data }))
-          .catch(error => sendResponse({ success: false, error: error.message }));
+          .then(data => {
+            console.log('Bill processing successful:', data);
+            sendResponse({ success: true, data });
+          })
+          .catch(error => {
+            console.error('Bill processing failed:', error);
+            sendResponse({ success: false, error: error.message });
+          });
         return true; // Keep message channel open for async response
       }
     });
@@ -34,21 +42,35 @@ class PaytmBillExtractor {
   }
 
   async fillConsumerNumber(consumerNumber) {
-    // Look for consumer number input field
-    const selectors = [
-      'input[name*="consumer"]',
-      'input[placeholder*="consumer"]',
-      'input[placeholder*="Consumer"]',
-      'input[id*="consumer"]',
-      'input[class*="consumer"]',
-      'input[type="text"]',
-      'input[type="number"]'
-    ];
-
+    // Look for consumer number input field using label text
     let input = null;
-    for (const selector of selectors) {
-      input = document.querySelector(selector);
-      if (input && input.offsetParent !== null) break;
+    
+    // Find by label containing "Consumer Number"
+    const labels = Array.from(document.querySelectorAll('label')).filter(label => 
+      label.textContent.trim().includes('Consumer Number')
+    );
+    
+    for (const label of labels) {
+      // Look for input in the same parent container
+      const parent = label.parentElement;
+      if (parent) {
+        input = parent.querySelector('input[type="text"]');
+        if (input && input.offsetParent !== null) break;
+      }
+    }
+    
+    // Fallback to generic selectors
+    if (!input) {
+      const selectors = [
+        'input[maxlength="50"]',
+        'input[type="text"][required]',
+        'input[type="text"]'
+      ];
+      
+      for (const selector of selectors) {
+        input = document.querySelector(selector);
+        if (input && input.offsetParent !== null) break;
+      }
     }
 
     if (!input) {
@@ -68,29 +90,20 @@ class PaytmBillExtractor {
   }
 
   async clickProceedButton() {
-    // Look for proceed/submit button
-    const selectors = [
-      'button:contains("Proceed")',
-      'button:contains("Submit")',
-      'button:contains("Get Bill")',
-      'button:contains("Fetch")',
-      'input[type="submit"]',
-      'button[type="submit"]',
-      '.btn-primary',
-      '.submit-btn'
-    ];
-
+    // Look for buttons by text content only
+    const buttonTexts = ['Proceed', 'Submit', 'Get Bill', 'Fetch', 'Continue'];
+    
     let button = null;
-    for (const selector of selectors) {
-      if (selector.includes(':contains')) {
-        const text = selector.split(':contains("')[1].split('")')[0];
-        button = Array.from(document.querySelectorAll('button')).find(btn => 
-          btn.textContent.trim().toLowerCase().includes(text.toLowerCase())
-        );
-      } else {
-        button = document.querySelector(selector);
-      }
+    for (const text of buttonTexts) {
+      button = Array.from(document.querySelectorAll('button')).find(btn => 
+        btn.textContent.trim() === text
+      );
       if (button && button.offsetParent !== null && !button.disabled) break;
+    }
+    
+    // Fallback to generic submit inputs
+    if (!button) {
+      button = document.querySelector('input[type="submit"]');
     }
 
     if (!button) {
@@ -108,11 +121,14 @@ class PaytmBillExtractor {
     await this.waitForBillDetails();
     
     const billDetails = {
-      lastDate: this.extractLastDate(),
-      amount: this.extractAmount(),
-      status: this.extractStatus(),
-      dueDate: this.extractDueDate(),
-      billNumber: this.extractBillNumber()
+      name: this.extractFieldValue('Name'),
+      dueDate: this.extractFieldValue('Due Date'),
+      billNumber: this.extractFieldValue('Bill Number'),
+      billDate: this.extractFieldValue('Bill Date'),
+      billPeriod: this.extractFieldValue('Bill Period'),
+      earlyPaymentDate: this.extractFieldValue('Early Payment Date'),
+      billType: this.extractFieldValue('Bill Type'),
+      billMonth: this.extractFieldValue('Bill Month')
     };
 
     return billDetails;
@@ -122,18 +138,13 @@ class PaytmBillExtractor {
     const startTime = Date.now();
     
     while (Date.now() - startTime < maxWait) {
-      // Check if bill details are loaded
-      const indicators = [
-        document.querySelector('[class*="bill"]'),
-        document.querySelector('[class*="amount"]'),
-        document.querySelector('[class*="due"]'),
-        document.querySelector('table'),
-        document.querySelector('.bill-details'),
-        document.querySelector('.payment-details')
-      ];
+      // Check if Consumer Details section is loaded
+      const consumerDetails = Array.from(document.querySelectorAll('div')).find(el => 
+        el.textContent.includes('Consumer Details')
+      );
 
-      if (indicators.some(el => el && el.offsetParent !== null)) {
-        await this.delay(1000); // Additional wait for content to stabilize
+      if (consumerDetails) {
+        await this.delay(1000);
         return;
       }
 
@@ -143,108 +154,36 @@ class PaytmBillExtractor {
     throw new Error('Bill details did not load within timeout');
   }
 
-  extractLastDate() {
-    const selectors = [
-      '[class*="last-date"]',
-      '[class*="due-date"]',
-      '[class*="bill-date"]',
-      'td:contains("Last Date")',
-      'td:contains("Due Date")',
-      'span:contains("Last Date")',
-      'div:contains("Last Date")'
-    ];
+  extractFieldValue(fieldName) {
+    // Find all divs that contain the field name
+    const labelDivs = Array.from(document.querySelectorAll('div')).filter(div => 
+      div.textContent.trim() === fieldName
+    );
 
-    return this.extractTextBySelectors(selectors, 'last date');
-  }
+    for (const labelDiv of labelDivs) {
+      // Look for the value in the next sibling div
+      const nextSibling = labelDiv.nextElementSibling;
+      if (nextSibling && nextSibling.textContent.trim()) {
+        return nextSibling.textContent.trim();
+      }
 
-  extractAmount() {
-    const selectors = [
-      '[class*="amount"]',
-      '[class*="bill-amount"]',
-      '[class*="total"]',
-      'td:contains("Amount")',
-      'td:contains("Total")',
-      'span:contains("₹")',
-      'div:contains("₹")'
-    ];
+      // Look for the value in parent's next sibling
+      const parentNext = labelDiv.parentElement?.nextElementSibling;
+      if (parentNext && parentNext.textContent.trim()) {
+        return parentNext.textContent.trim();
+      }
 
-    return this.extractTextBySelectors(selectors, 'amount');
-  }
-
-  extractStatus() {
-    const selectors = [
-      '[class*="status"]',
-      '[class*="bill-status"]',
-      'td:contains("Status")',
-      'span:contains("Paid")',
-      'span:contains("Unpaid")',
-      'span:contains("Overdue")'
-    ];
-
-    return this.extractTextBySelectors(selectors, 'status');
-  }
-
-  extractDueDate() {
-    const selectors = [
-      '[class*="due-date"]',
-      'td:contains("Due Date")',
-      'span:contains("Due Date")',
-      'div:contains("Due Date")'
-    ];
-
-    return this.extractTextBySelectors(selectors, 'due date');
-  }
-
-  extractBillNumber() {
-    const selectors = [
-      '[class*="bill-number"]',
-      '[class*="bill-id"]',
-      'td:contains("Bill Number")',
-      'td:contains("Bill ID")',
-      'span:contains("Bill Number")'
-    ];
-
-    return this.extractTextBySelectors(selectors, 'bill number');
-  }
-
-  extractTextBySelectors(selectors, fieldName) {
-    for (const selector of selectors) {
-      try {
-        let element;
-        
-        if (selector.includes(':contains')) {
-          const text = selector.split(':contains("')[1].split('")')[0];
-          const tagName = selector.split(':contains')[0];
-          element = Array.from(document.querySelectorAll(tagName)).find(el => 
-            el.textContent.toLowerCase().includes(text.toLowerCase())
-          );
-        } else {
-          element = document.querySelector(selector);
-        }
-
-        if (element && element.offsetParent !== null) {
-          let text = element.textContent.trim();
-          
-          // If this is a label, try to find the value in next sibling or parent
-          if (text.toLowerCase().includes(fieldName)) {
-            const nextSibling = element.nextElementSibling;
-            const parent = element.parentElement;
-            
-            if (nextSibling && nextSibling.textContent.trim()) {
-              text = nextSibling.textContent.trim();
-            } else if (parent) {
-              const parentText = parent.textContent.trim();
-              const labelText = element.textContent.trim();
-              text = parentText.replace(labelText, '').trim();
-            }
-          }
-          
-          if (text && text.length > 0 && !text.toLowerCase().includes(fieldName)) {
-            return text;
+      // Look within the same parent container
+      const parent = labelDiv.parentElement;
+      if (parent) {
+        const allDivs = parent.querySelectorAll('div');
+        const labelIndex = Array.from(allDivs).indexOf(labelDiv);
+        if (labelIndex >= 0 && labelIndex + 1 < allDivs.length) {
+          const valueDiv = allDivs[labelIndex + 1];
+          if (valueDiv && valueDiv.textContent.trim() !== fieldName) {
+            return valueDiv.textContent.trim();
           }
         }
-      } catch (error) {
-        continue;
       }
     }
     

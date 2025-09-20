@@ -47,6 +47,38 @@ body {
   color: var(--dark-blue);
 }
 
+.mode-selector {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.mode-selector label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mode-selector input[type="radio"] {
+  margin: 0;
+}
+
+#singleConsumerInput {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--gray-medium);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+#singleConsumerInput:focus {
+  border-color: var(--primary-blue);
+  outline: none;
+}
+
 #fileInput {
   width: 100%;
   padding: 8px;

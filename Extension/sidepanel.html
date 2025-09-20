@@ -8,8 +8,21 @@
 <body>
   <div class="container">
     <div class="section">
-      <h3>Upload Consumer Data</h3>
-      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+      <h3>Search Mode</h3>
+      <div class="mode-selector">
+        <label><input type="radio" name="mode" value="single" checked> Single Consumer</label>
+        <label><input type="radio" name="mode" value="bulk"> Bulk CSV Upload</label>
+      </div>
+    </div>
+
+    <div class="section" id="singleSection">
+      <h3>Consumer Number</h3>
+      <input type="text" id="singleConsumerInput" placeholder="Enter consumer number">
+    </div>
+
+    <div class="section" id="bulkSection" style="display: none;">
+      <h3>Upload CSV File</h3>
+      <input type="file" id="fileInput" accept=".csv">
       <div id="fileStatus" class="status"></div>
     </div>
 
