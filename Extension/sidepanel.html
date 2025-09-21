@@ -7,6 +7,11 @@
 </head>
 <body>
   <div class="container">
+    <div class="connection-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Checking connection...</span>
+    </div>
+    
     <div class="section">
       <h3>Search Mode</h3>
       <div class="mode-selector">
@@ -17,7 +22,7 @@
 
     <div class="section" id="singleSection">
       <h3>Consumer Number</h3>
-      <input type="text" id="singleConsumerInput" placeholder="Enter consumer number">
+      <input type="number" id="singleConsumerInput" placeholder="Enter consumer number">
     </div>
 
     <div class="section" id="bulkSection" style="display: none;">

@@ -7,6 +7,12 @@ class PaytmBillExtractor {
     console.log('PaytmBillExtractor initialized');
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log('Message received:', request);
+      
+      if (request.action === 'ping') {
+        sendResponse({ success: true, connected: true });
+        return;
+      }
+      
       if (request.action === 'processBill') {
         this.processBill(request.consumer)
           .then(data => {

@@ -10,6 +10,8 @@ class BillProcessor {
 
   init() {
     this.bindEvents();
+    this.checkConnection();
+    this.startConnectionMonitoring();
   }
 
   bindEvents() {
@@ -146,6 +148,14 @@ class BillProcessor {
 
   async startProcessing() {
     if (this.consumers.length === 0) return;
+    
+    // Check connection before starting
+    try {
+      await this.pingContentScript();
+    } catch (error) {
+      document.getElementById('status').textContent = 'Error: Not connected to Paytm. Please refresh the page.';
+      return;
+    }
     
     this.isProcessing = true;
     this.isPaused = false;
@@ -365,6 +375,62 @@ class BillProcessor {
 
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async checkConnection() {
+    try {
+      await this.pingContentScript();
+      this.updateConnectionStatus(true);
+    } catch (error) {
+      this.updateConnectionStatus(false);
+    }
+  }
+
+  async pingContentScript() {
+    return new Promise((resolve, reject) => {
+      chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
+        if (!tabs[0]) {
+          reject(new Error('No active tab'));
+          return;
+        }
+        
+        const tab = tabs[0];
+        if (!tab.url || !tab.url.includes('paytm.com')) {
+          reject(new Error('Not on Paytm'));
+          return;
+        }
+        
+        try {
+          const response = await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
+          if (response && response.connected) {
+            resolve();
+          } else {
+            reject(new Error('No response'));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  updateConnectionStatus(connected) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    
+    if (connected) {
+      dot.className = 'status-dot connected';
+      text.textContent = 'Connected to Paytm';
+    } else {
+      dot.className = 'status-dot disconnected';
+      text.textContent = 'Disconnected - Please refresh Paytm page';
+    }
+  }
+
+  startConnectionMonitoring() {
+    setInterval(() => {
+      this.checkConnection();
+    }, 3000);
   }
 }
 
