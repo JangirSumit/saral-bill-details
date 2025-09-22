@@ -245,8 +245,11 @@ class BillProcessor {
       const name = consumer.name || consumer.Name || consumer.consumer_name || 'Unknown';
       
       item.innerHTML = `
-        <span>${consumerNumber} - ${name}</span>
-        <span class="status-indicator">Pending</span>
+        <div class="consumer-header">
+          <span>${consumerNumber} - ${name}</span>
+          <span class="status-indicator">Pending</span>
+        </div>
+        <div class="consumer-details" id="details-${index}" style="display: none;"></div>
       `;
       
       list.appendChild(item);
@@ -318,6 +321,16 @@ class BillProcessor {
       item.className = 'consumer-item completed';
       item.querySelector('.status-indicator').textContent = 'Completed';
       
+      // Show success details inline
+      const details = document.getElementById(`details-${index}`);
+      details.style.display = 'block';
+      details.innerHTML = `
+        Name: ${result.name || 'N/A'}<br>
+        Due Date: ${result.dueDate || 'N/A'}<br>
+        Bill Number: ${result.billNumber || 'N/A'}<br>
+        Bill Type: ${result.billType || 'N/A'}
+      `;
+      
     } catch (error) {
       console.error('Processing error:', error);
       this.results.push({
@@ -328,6 +341,11 @@ class BillProcessor {
       
       item.className = 'consumer-item error';
       item.querySelector('.status-indicator').textContent = 'Error';
+      
+      // Show error details inline
+      const details = document.getElementById(`details-${index}`);
+      details.style.display = 'block';
+      details.innerHTML = `Error: ${error.message}`;
     }
     
     // Wait between requests
@@ -389,7 +407,6 @@ class BillProcessor {
     this.isPaused = false;
     this.currentIndex = 0;
     this.updateButtons();
-    this.displayResults();
     document.getElementById('status').textContent = 'Processing completed';
     document.getElementById('resultsSection').style.display = 'block';
   }
@@ -405,36 +422,7 @@ class BillProcessor {
     document.getElementById('progressBar').style.width = `${progress}%`;
   }
 
-  displayResults() {
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = '';
-    
-    this.results.forEach((result, index) => {
-      const item = document.createElement('div');
-      item.className = `result-item ${result.success ? 'success' : 'error'}`;
-      
-      const consumerNumber = result.consumer.consumerNumber || result.consumer.ConsumerNumber || result.consumer.consumer_number;
-      
-      if (result.success) {
-        item.innerHTML = `
-          <strong>${consumerNumber}</strong>
-          <div class="result-details">
-            Name: ${result.data.name || 'N/A'}<br>
-            Due Date: ${result.data.dueDate || 'N/A'}<br>
-            Bill Number: ${result.data.billNumber || 'N/A'}<br>
-            Bill Type: ${result.data.billType || 'N/A'}
-          </div>
-        `;
-      } else {
-        item.innerHTML = `
-          <strong>${consumerNumber}</strong>
-          <div class="result-details">Error: ${result.error}</div>
-        `;
-      }
-      
-      resultsDiv.appendChild(item);
-    });
-  }
+
 
   downloadResults() {
     const csv = this.resultsToCSV();
