@@ -270,6 +270,7 @@ class BillProcessor {
     this.isProcessing = true;
     this.isPaused = false;
     this.updateButtons();
+    this.commonErrorShown = false;
     
     document.getElementById('status').textContent = 'Starting processing...';
     
@@ -342,7 +343,16 @@ class BillProcessor {
       item.className = 'consumer-item error';
       item.querySelector('.status-indicator').textContent = 'Error';
       
-      // Show error details inline
+      // Show common error only once for field validation errors
+      if (error.message.includes('Required fields not available') && !this.commonErrorShown) {
+        document.getElementById('status').textContent = error.message;
+        this.commonErrorShown = true;
+        // Stop processing for this type of error
+        this.stopProcessing();
+        return;
+      }
+      
+      // Show error details inline for other errors
       const details = document.getElementById(`details-${index}`);
       details.style.display = 'block';
       details.innerHTML = `Error: ${error.message}`;
