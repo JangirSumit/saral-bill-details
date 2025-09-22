@@ -14,7 +14,7 @@ class PaytmBillExtractor {
       }
       
       if (request.action === 'processBill') {
-        this.processBill(request.consumer)
+        this.processBill(request.consumer, request.setup)
           .then(data => {
             console.log('Bill processing successful:', data);
             sendResponse({ success: true, data });
@@ -28,11 +28,16 @@ class PaytmBillExtractor {
     });
   }
 
-  async processBill(consumer) {
+  async processBill(consumer, setup) {
     const consumerNumber = consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number;
     
     if (!consumerNumber) {
       throw new Error('Consumer number not found');
+    }
+
+    // Setup form configuration
+    if (setup) {
+      await this.setupForm(setup);
     }
 
     // Fill consumer number in the form
@@ -45,6 +50,73 @@ class PaytmBillExtractor {
     const billDetails = await this.extractBillDetails();
     
     return billDetails;
+  }
+
+  async setupForm(setup) {
+    // Select service type radio button
+    if (setup.serviceType) {
+      await this.selectServiceType(setup.serviceType);
+    }
+    
+    // Select state
+    if (setup.state) {
+      await this.selectState(setup.state);
+    }
+    
+    // Select electricity board
+    if (setup.board) {
+      await this.selectElectricityBoard(setup.board);
+    }
+  }
+
+  async selectServiceType(serviceType) {
+    const radio = document.querySelector(`input[name="serviceType"][value="${serviceType}"]`);
+    if (radio && !radio.checked) {
+      radio.click();
+      await this.delay(500);
+    }
+  }
+
+  async selectState(stateName) {
+    const stateInput = Array.from(document.querySelectorAll('input')).find(input => {
+      const label = input.parentElement?.querySelector('label');
+      return label && label.textContent.includes('State');
+    });
+    
+    if (stateInput && stateInput.value !== stateName) {
+      stateInput.click();
+      await this.delay(500);
+      
+      const stateOption = Array.from(document.querySelectorAll('li span')).find(span => 
+        span.textContent.trim() === stateName
+      );
+      
+      if (stateOption) {
+        stateOption.click();
+        await this.delay(1000);
+      }
+    }
+  }
+
+  async selectElectricityBoard(boardName) {
+    const boardInput = Array.from(document.querySelectorAll('input')).find(input => {
+      const label = input.parentElement?.querySelector('label');
+      return label && label.textContent.includes('Electricity Board');
+    });
+    
+    if (boardInput && boardInput.value !== boardName) {
+      boardInput.click();
+      await this.delay(500);
+      
+      const boardOption = Array.from(document.querySelectorAll('li span')).find(span => 
+        span.textContent.trim() === boardName
+      );
+      
+      if (boardOption) {
+        boardOption.click();
+        await this.delay(1000);
+      }
+    }
   }
 
   async fillConsumerNumber(consumerNumber) {

@@ -27,7 +27,7 @@ body {
 }
 
 .container {
-  padding: 16px;
+  padding: 8px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -35,12 +35,12 @@ body {
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 6px 8px;
   background: var(--white);
   border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 12px;
+  margin-bottom: 8px;
+  font-size: 11px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -61,16 +61,17 @@ body {
 
 .section {
   background: var(--white);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
 }
 
 .section h3 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--dark-blue);
 }
 
@@ -93,13 +94,13 @@ body {
 }
 
 .bill-setup {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .service-type {
   display: flex;
-  gap: 20px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 
 .radio-label {
@@ -142,11 +143,12 @@ body {
 .form-fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .field-group {
   position: relative;
+  overflow: visible;
 }
 
 .input-wrapper {
@@ -158,10 +160,10 @@ body {
 
 .input-wrapper input {
   width: 100%;
-  padding: 12px 32px 8px 12px;
+  padding: 12px 28px 6px 8px;
   border: none;
   outline: none;
-  font-size: 12px;
+  font-size: 11px;
   background: transparent;
   cursor: pointer;
 }
@@ -194,10 +196,11 @@ body {
   border: 1px solid var(--gray-medium);
   border-top: none;
   border-radius: 0 0 4px 4px;
-  max-height: 200px;
+  max-height: 150px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 9999;
   display: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .dropdown.show {

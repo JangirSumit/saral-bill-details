@@ -272,10 +272,14 @@ class BillProcessor {
     
     try {
       console.log('Sending message to content script:', consumer);
+      // Get setup configuration
+      const setup = this.getSetupConfiguration();
+      
       // Send message to content script to fill form and get bill details
       const result = await this.sendToContentScript({
         action: 'processBill',
-        consumer: consumer
+        consumer: consumer,
+        setup: setup
       });
       
       console.log('Received result:', result);
@@ -496,13 +500,14 @@ class BillProcessor {
   }
 
   updateConnectionStatus(connected) {
+    const statusDiv = document.querySelector('.connection-status');
     const dot = document.getElementById('statusDot');
     const text = document.getElementById('statusText');
     
     if (connected) {
-      dot.className = 'status-dot connected';
-      text.textContent = 'Connected to Paytm';
+      statusDiv.style.display = 'none';
     } else {
+      statusDiv.style.display = 'flex';
       dot.className = 'status-dot disconnected';
       text.textContent = 'Disconnected - Please refresh Paytm page';
     }
@@ -512,6 +517,18 @@ class BillProcessor {
     setInterval(() => {
       this.checkConnection();
     }, 3000);
+  }
+
+  getSetupConfiguration() {
+    const serviceType = document.querySelector('input[name="serviceType"]:checked')?.value || 'electricity';
+    const state = document.getElementById('stateInput')?.value || 'Maharashtra';
+    const board = document.getElementById('boardInput')?.value || '';
+    
+    return {
+      serviceType: serviceType,
+      state: state,
+      board: board
+    };
   }
 }
 
