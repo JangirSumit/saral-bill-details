@@ -457,37 +457,43 @@ class BillProcessor {
   }
 
   resultsToCSV() {
-    const headers = ['Consumer Number', 'Name', 'Status', 'Due Date', 'Bill Number', 'Bill Date', 'Bill Period', 'Bill Type', 'Error'];
+    const headers = ['Consumer Number', 'Consumer Name', 'Bill Holder Name', 'Due Date', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
     const rows = [headers.join(',')];
     
     this.results.forEach(result => {
       const consumer = result.consumer;
       const consumerNumber = consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number || '';
-      const name = consumer.name || consumer.Name || consumer.consumer_name || '';
+      const consumerName = consumer.name || consumer.Name || consumer.consumer_name || '';
       
       if (result.success) {
         rows.push([
           consumerNumber,
-          name,
-          'Success',
+          consumerName,
+          result.data.name || '',
           result.data.dueDate || '',
           result.data.billNumber || '',
           result.data.billDate || '',
           result.data.billPeriod || '',
+          result.data.earlyPaymentDate || '',
           result.data.billType || '',
-          ''
+          result.data.billMonth || '',
+          '',
+          'Success'
         ].join(','));
       } else {
         rows.push([
           consumerNumber,
-          name,
-          'Error',
+          consumerName,
           '',
           '',
           '',
           '',
           '',
-          result.error
+          '',
+          '',
+          '',
+          result.error,
+          'Error'
         ].join(','));
       }
     });
