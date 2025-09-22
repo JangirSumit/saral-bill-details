@@ -118,11 +118,6 @@
     </div>
     
     <div class="tab-content" id="processingTab" style="display: none;">
-      <div class="section" id="consumerSection" style="display: none;">
-        <h3>Consumer List</h3>
-        <div id="consumerList" class="consumer-list"></div>
-      </div>
-
       <div class="section" id="controlSection" style="display: none;">
         <h3>Process Bills</h3>
         <div class="controls">
@@ -137,9 +132,15 @@
       </div>
 
       <div class="section" id="resultsSection" style="display: none;">
-        <h3>Results</h3>
         <button id="downloadBtn" class="btn-primary">Download Results</button>
-        <div id="results" class="results"></div>
+      </div>
+
+      <div class="section consumer-section" id="consumerSection" style="display: none;">
+        <div class="consumer-header">
+          <h3>Consumer List</h3>
+          <button id="downloadIconBtn" class="download-icon" title="Download Results" style="display: none;">⬇</button>
+        </div>
+        <div id="consumerList" class="consumer-list"></div>
       </div>
     </div>
   </div>

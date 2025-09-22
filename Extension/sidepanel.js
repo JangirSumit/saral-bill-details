@@ -25,6 +25,7 @@ class BillProcessor {
     document.getElementById('pauseBtn').addEventListener('click', this.pauseProcessing.bind(this));
     document.getElementById('stopBtn').addEventListener('click', this.stopProcessing.bind(this));
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
+    document.getElementById('downloadIconBtn').addEventListener('click', this.downloadResults.bind(this));
   }
 
   setupTabs() {
@@ -242,11 +243,11 @@ class BillProcessor {
       item.id = `consumer-${index}`;
       
       const consumerNumber = consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number || 'N/A';
-      const name = consumer.name || consumer.Name || consumer.consumer_name || 'Unknown';
+      const name = consumer.name || consumer.Name || consumer.consumer_name || '';
       
       item.innerHTML = `
         <div class="consumer-header">
-          <span>${consumerNumber} - ${name}</span>
+          <span>${consumerNumber}${name ? ' - ' + name : ''}</span>
           <span class="status-indicator">Pending</span>
         </div>
         <div class="consumer-details" id="details-${index}" style="display: none;"></div>
@@ -419,6 +420,7 @@ class BillProcessor {
     this.updateButtons();
     document.getElementById('status').textContent = 'Processing completed';
     document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('downloadIconBtn').style.display = 'block';
   }
 
   updateButtons() {
@@ -448,7 +450,7 @@ class BillProcessor {
   }
 
   resultsToCSV() {
-    const headers = ['Consumer Number', 'Name', 'Status', 'Last Date', 'Amount', 'Bill Status', 'Error'];
+    const headers = ['Consumer Number', 'Name', 'Status', 'Due Date', 'Bill Number', 'Bill Date', 'Bill Period', 'Bill Type', 'Error'];
     const rows = [headers.join(',')];
     
     this.results.forEach(result => {
@@ -461,9 +463,11 @@ class BillProcessor {
           consumerNumber,
           name,
           'Success',
-          result.data.lastDate || '',
-          result.data.amount || '',
-          result.data.status || '',
+          result.data.dueDate || '',
+          result.data.billNumber || '',
+          result.data.billDate || '',
+          result.data.billPeriod || '',
+          result.data.billType || '',
           ''
         ].join(','));
       } else {
@@ -471,6 +475,8 @@ class BillProcessor {
           consumerNumber,
           name,
           'Error',
+          '',
+          '',
           '',
           '',
           '',

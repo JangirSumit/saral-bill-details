@@ -85,6 +85,9 @@ body {
 
 #processingTab {
   padding: 0 8px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
 }
 
 .status-dot {
@@ -109,6 +112,39 @@ body {
   margin-bottom: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   overflow: visible;
+}
+
+.consumer-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  min-height: 0;
+}
+
+.consumer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.download-icon {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.download-icon:hover {
+  background: var(--dark-blue);
 }
 
 .section h3 {
@@ -301,8 +337,9 @@ body {
 }
 
 .consumer-list {
-  max-height: 200px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .consumer-item {
