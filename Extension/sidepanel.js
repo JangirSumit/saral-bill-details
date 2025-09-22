@@ -26,6 +26,7 @@ class BillProcessor {
     document.getElementById('stopBtn').addEventListener('click', this.stopProcessing.bind(this));
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
     document.getElementById('downloadIconBtn').addEventListener('click', this.downloadResults.bind(this));
+    document.getElementById('refreshBtn').addEventListener('click', this.refreshAll.bind(this));
   }
 
   setupTabs() {
@@ -102,33 +103,38 @@ class BillProcessor {
     dropdown.classList.remove('show');
   }
 
-  loadElectricityBoards(state) {
-    const boards = {
-      'Maharashtra': ['Adani Electricity', 'Brihan Mumbai Electricity (BEST)', 'Mahavitran - Maharastra (MSEDCL)', 'Tata Power - Mumbai', 'Torrent Power, Maharashtra'],
-      'Gujarat': ['PGVCL - Paschim Gujarat Vij Company Limited', 'MGVCL - Madhya Gujarat Vij Company Limited', 'UGVCL - Uttar Gujarat Vij Company Limited'],
-      'Karnataka': ['BESCOM - Bangalore Electricity Supply Company Ltd', 'MESCOM - Mangalore Electricity Supply Company Ltd', 'HESCOM - Hubli Electricity Supply Company Ltd'],
-      'Tamil Nadu': ['TNEB - Tamil Nadu Electricity Board', 'TANGEDCO - Tamil Nadu Generation and Distribution Corporation Limited'],
-      'Uttar Pradesh': ['UPPCL - Uttar Pradesh Power Corporation Ltd'],
-      'West Bengal': ['WBSEDCL - West Bengal State Electricity Distribution Company Limited'],
-      'Rajasthan': ['JVVNL - Jaipur Vidyut Vitran Nigam Ltd', 'AVVNL - Ajmer Vidyut Vitran Nigam Ltd'],
-      'Haryana': ['DHBVN - Dakshin Haryana Bijli Vitran Nigam', 'UHBVN - Uttar Haryana Bijli Vitran Nigam'],
-      'Punjab': ['PSPCL - Punjab State Power Corporation Limited'],
-      'New Delhi': ['BSES Rajdhani Power Limited', 'BSES Yamuna Power Limited', 'Tata Power Delhi Distribution Limited']
-    };
-    
-    const boardList = document.getElementById('boardList');
-    boardList.innerHTML = '';
-    
-    const stateBoards = boards[state] || ['No electricity boards available'];
-    stateBoards.forEach(board => {
-      const li = document.createElement('li');
-      li.dataset.value = board;
-      li.textContent = board;
-      boardList.appendChild(li);
-    });
-    
-    // Clear board input when state changes
-    document.getElementById('boardInput').value = '';
+  async loadElectricityBoards(state) {
+    try {
+      // Try to get boards from storage first
+      const result = await chrome.storage.local.get(['electricityBoards']);
+      let boards = result.electricityBoards;
+      
+      // If not in storage, load from JSON file
+      if (!boards) {
+        const response = await fetch(chrome.runtime.getURL('boards.json'));
+        boards = await response.json();
+        // Save to storage for future use
+        await chrome.storage.local.set({ electricityBoards: boards });
+      }
+      
+      const boardList = document.getElementById('boardList');
+      boardList.innerHTML = '';
+      
+      const stateBoards = boards[state] || ['No electricity boards available'];
+      stateBoards.forEach(board => {
+        const li = document.createElement('li');
+        li.dataset.value = board;
+        li.textContent = board;
+        boardList.appendChild(li);
+      });
+      
+      // Clear board input when state changes
+      document.getElementById('boardInput').value = '';
+    } catch (error) {
+      console.error('Error loading electricity boards:', error);
+      const boardList = document.getElementById('boardList');
+      boardList.innerHTML = '<li>Error loading boards</li>';
+    }
   }
 
   handleModeChange(event) {
@@ -547,6 +553,29 @@ class BillProcessor {
     setInterval(() => {
       this.checkConnection();
     }, 3000);
+  }
+
+  refreshAll() {
+    this.consumers = [];
+    this.currentIndex = 0;
+    this.isProcessing = false;
+    this.isPaused = false;
+    this.results = [];
+    
+    document.getElementById('consumerList').innerHTML = '';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('status').textContent = '';
+    document.getElementById('fileStatus').textContent = '';
+    document.getElementById('singleConsumerInput').value = '';
+    document.getElementById('fileInput').value = '';
+    
+    document.getElementById('consumerSection').style.display = 'none';
+    document.getElementById('controlSection').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('downloadIconBtn').style.display = 'none';
+    
+    this.updateButtons();
+    this.switchTab('setup');
   }
 
   getSetupConfiguration() {

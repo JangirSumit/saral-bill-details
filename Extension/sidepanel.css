@@ -122,14 +122,14 @@ body {
   min-height: 0;
 }
 
-.consumer-header {
+.consumer-header, .setup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.download-icon {
+.download-icon, .refresh-icon {
   background: var(--primary-blue);
   color: var(--white);
   border: none;
@@ -143,7 +143,7 @@ body {
   justify-content: center;
 }
 
-.download-icon:hover {
+.download-icon:hover, .refresh-icon:hover {
   background: var(--dark-blue);
 }
 

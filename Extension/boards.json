@@ -1,0 +1,66 @@
+{
+  "Maharashtra": [
+    "Adani Electricity",
+    "Brihan Mumbai Electricity (BEST)",
+    "Mahavitran - Maharastra (MSEDCL)",
+    "Tata Power - Mumbai",
+    "Torrent Power, Maharashtra"
+  ],
+  "Gujarat": [
+    "Paschim Gujarat Vij (PGVCL)",
+    "Dakshin Gujarat Vij (DGVCL)",
+    "Madhya Gujarat Vij (MGVCL)",
+    "Uttar Gujarat Vij (UGVCL)",
+    "Torrent Power, Gujarat",
+    "Gift Power",
+    "Vaghani Energy"
+  ],
+  "Karnataka": [
+    "Bangalore Electricity (BESCOM)",
+    "Mangalore Electricity (MESCOM) - Rural",
+    "Mangalore Electricity (MESCOM) - Urban",
+    "Hubli Electricity (HESCOM)",
+    "Chamundeshwari Electricity (CESCOM)",
+    "Gulbarga Electricity (GESCOM)",
+    "Hukkeri Rural Electric Co-Op Society"
+  ],
+  "Tamil Nadu": [
+    "Tamil Nadu Power (TNPDCL)"
+  ],
+  "Uttar Pradesh": [
+    "Uttar Pradesh Power (UPPCL)",
+    "Noida Power (NPCL)",
+    "Torrent Power, Agra",
+    "TP Renewables Microgrid (TPRMG)"
+  ],
+  "West Bengal": [
+    "West Bengal Electricity (WBSEDCL)",
+    "CESC Kolkata, West Bengal",
+    "India Power (IPCL)"
+  ],
+  "Rajasthan": [
+    "Jaipur Vidyut Vitran (JVVNL)",
+    "Ajmer Vidyut Vitran (AVVNL)",
+    "Jodhpur Vidyut Vitran (JDVVNL)",
+    "Kota Electricity (KEDL)",
+    "TP Ajmer Electricity (TPADL)",
+    "Bikaner Electricity (BKESL)",
+    "Bharatpur Electricity (BESL)"
+  ],
+  "Haryana": [
+    "Dakshin Haryana Bijli Vitran (DHBVN)",
+    "Uttar Haryana Bijli Vitran (UHBVN)"
+  ],
+  "Punjab": [
+    "Punjab State Power (PSPCL)"
+  ],
+  "New Delhi": [
+    "BSES Rajdhani",
+    "BSES Yamuna",
+    "New Delhi Municipal Council (NDMC)",
+    "Tata Power - Delhi"
+  ],
+  "Assam": [
+    "Assam Power (APDCL)"
+  ]
+}

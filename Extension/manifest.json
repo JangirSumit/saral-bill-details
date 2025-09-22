@@ -39,5 +39,11 @@
       "matches": ["https://paytm.com/*"],
       "js": ["content.js"]
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["boards.json"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
