@@ -365,8 +365,9 @@ class BillProcessor {
       details.innerHTML = `Error: ${error.message}`;
     }
     
-    // Wait between requests
-    await this.delay(2000);
+    // Wait between requests with random delay to look natural
+    const randomDelay = 1000 + Math.floor(Math.random() * 4000); // 1-5 seconds
+    await this.delay(randomDelay);
   }
 
   async sendToContentScript(message) {
@@ -496,6 +497,10 @@ class BillProcessor {
 
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  getRandomDelay(min = 1000, max = 5000) {
+    return min + Math.floor(Math.random() * (max - min));
   }
 
   async checkConnection() {
