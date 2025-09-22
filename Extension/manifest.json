@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "sidePanel",
-    "storage"
+    "storage",
+    "debugger"
   ],
   "host_permissions": [
     "https://paytm.com/*"
