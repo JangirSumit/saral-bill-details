@@ -76,21 +76,31 @@ async function sendTrustedClick(tabId, selector) {
       findExpression = `document.querySelector('${selector}')`;
     }
     
-    // Get element position
+    // Get element position with fallback for li elements
     const result = await chrome.debugger.sendCommand({ tabId }, 'Runtime.evaluate', {
       expression: `
-        const targetEl = ${findExpression};
+        let targetEl = ${findExpression};
+        // Fallback for li elements with text content
+        if (!targetEl && '${selector}'.includes('li:contains(')) {
+          const match = '${selector}'.match(/li:contains\('([^']+)'\)/);
+          if (match) {
+            const text = match[1];
+            targetEl = Array.from(document.querySelectorAll('li')).find(li => 
+              li.textContent && li.textContent.includes(text)
+            );
+          }
+        }
         if (targetEl) {
           const rect = targetEl.getBoundingClientRect();
-          ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+          ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, found: true });
         } else {
-          null;
+          ({ found: false });
         }
       `,
       returnByValue: true
     });
     
-    if (result.result.value) {
+    if (result.result.value && result.result.value.found) {
       const { x, y } = result.result.value;
       
       // Send mouse click
@@ -109,6 +119,8 @@ async function sendTrustedClick(tabId, selector) {
         button: 'left',
         clickCount: 1
       });
+    } else {
+      throw new Error('Element not found for selector: ' + selector);
     }
     
     await chrome.debugger.detach({ tabId });
