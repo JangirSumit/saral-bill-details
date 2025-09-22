@@ -15,6 +15,7 @@ class BillProcessor {
   }
 
   bindEvents() {
+    this.setupBillSetup();
     document.querySelectorAll('input[name="mode"]').forEach(radio => {
       radio.addEventListener('change', this.handleModeChange.bind(this));
     });
@@ -23,6 +24,86 @@ class BillProcessor {
     document.getElementById('pauseBtn').addEventListener('click', this.pauseProcessing.bind(this));
     document.getElementById('stopBtn').addEventListener('click', this.stopProcessing.bind(this));
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
+  }
+
+  setupBillSetup() {
+    // Set default state
+    document.getElementById('stateInput').value = 'Maharashtra';
+    
+    // State dropdown
+    document.getElementById('stateInput').addEventListener('click', () => {
+      this.toggleDropdown('stateDropdown');
+    });
+    
+    document.getElementById('stateDropdown').addEventListener('click', (e) => {
+      if (e.target.tagName === 'LI') {
+        document.getElementById('stateInput').value = e.target.dataset.value;
+        this.hideDropdown('stateDropdown');
+        this.loadElectricityBoards(e.target.dataset.value);
+      }
+    });
+    
+    // Board dropdown
+    document.getElementById('boardInput').addEventListener('click', () => {
+      this.toggleDropdown('boardDropdown');
+    });
+    
+    document.getElementById('boardDropdown').addEventListener('click', (e) => {
+      if (e.target.tagName === 'LI') {
+        document.getElementById('boardInput').value = e.target.dataset.value;
+        this.hideDropdown('boardDropdown');
+      }
+    });
+    
+    // Load default boards for Maharashtra
+    this.loadElectricityBoards('Maharashtra');
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.field-group')) {
+        this.hideDropdown('stateDropdown');
+        this.hideDropdown('boardDropdown');
+      }
+    });
+  }
+
+  toggleDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    dropdown.classList.toggle('show');
+  }
+
+  hideDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    dropdown.classList.remove('show');
+  }
+
+  loadElectricityBoards(state) {
+    const boards = {
+      'Maharashtra': ['Adani Electricity', 'Brihan Mumbai Electricity (BEST)', 'Mahavitran - Maharastra (MSEDCL)', 'Tata Power - Mumbai', 'Torrent Power, Maharashtra'],
+      'Gujarat': ['PGVCL - Paschim Gujarat Vij Company Limited', 'MGVCL - Madhya Gujarat Vij Company Limited', 'UGVCL - Uttar Gujarat Vij Company Limited'],
+      'Karnataka': ['BESCOM - Bangalore Electricity Supply Company Ltd', 'MESCOM - Mangalore Electricity Supply Company Ltd', 'HESCOM - Hubli Electricity Supply Company Ltd'],
+      'Tamil Nadu': ['TNEB - Tamil Nadu Electricity Board', 'TANGEDCO - Tamil Nadu Generation and Distribution Corporation Limited'],
+      'Uttar Pradesh': ['UPPCL - Uttar Pradesh Power Corporation Ltd'],
+      'West Bengal': ['WBSEDCL - West Bengal State Electricity Distribution Company Limited'],
+      'Rajasthan': ['JVVNL - Jaipur Vidyut Vitran Nigam Ltd', 'AVVNL - Ajmer Vidyut Vitran Nigam Ltd'],
+      'Haryana': ['DHBVN - Dakshin Haryana Bijli Vitran Nigam', 'UHBVN - Uttar Haryana Bijli Vitran Nigam'],
+      'Punjab': ['PSPCL - Punjab State Power Corporation Limited'],
+      'New Delhi': ['BSES Rajdhani Power Limited', 'BSES Yamuna Power Limited', 'Tata Power Delhi Distribution Limited']
+    };
+    
+    const boardList = document.getElementById('boardList');
+    boardList.innerHTML = '';
+    
+    const stateBoards = boards[state] || ['No electricity boards available'];
+    stateBoards.forEach(board => {
+      const li = document.createElement('li');
+      li.dataset.value = board;
+      li.textContent = board;
+      boardList.appendChild(li);
+    });
+    
+    // Clear board input when state changes
+    document.getElementById('boardInput').value = '';
   }
 
   handleModeChange(event) {

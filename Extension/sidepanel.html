@@ -13,6 +13,83 @@
     </div>
     
     <div class="section">
+      <h3>Bill Setup</h3>
+      <div class="bill-setup">
+        <div class="service-type">
+          <label class="radio-label">
+            <input type="radio" name="serviceType" value="electricity" checked>
+            <span class="radio-custom"></span>
+            Electricity Boards
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="serviceType" value="apartments">
+            <span class="radio-custom"></span>
+            Apartments
+          </label>
+        </div>
+        
+        <div class="form-fields">
+          <div class="field-group">
+            <div class="input-wrapper">
+              <input type="text" id="stateInput" required autocomplete="off" readonly>
+              <label>State</label>
+              <i class="dropdown-icon">▼</i>
+            </div>
+            <div class="dropdown" id="stateDropdown">
+              <ul>
+                <li data-value="Andhra Pradesh">Andhra Pradesh</li>
+                <li data-value="Arunachal Pradesh">Arunachal Pradesh</li>
+                <li data-value="Assam">Assam</li>
+                <li data-value="Bihar">Bihar</li>
+                <li data-value="Chandigarh">Chandigarh</li>
+                <li data-value="Chhattisgarh">Chhattisgarh</li>
+                <li data-value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</li>
+                <li data-value="Goa">Goa</li>
+                <li data-value="Gujarat">Gujarat</li>
+                <li data-value="Haryana">Haryana</li>
+                <li data-value="Himachal Pradesh">Himachal Pradesh</li>
+                <li data-value="Jammu & Kashmir">Jammu & Kashmir</li>
+                <li data-value="Jharkhand">Jharkhand</li>
+                <li data-value="Karnataka">Karnataka</li>
+                <li data-value="Kerala">Kerala</li>
+                <li data-value="Lakshadweep">Lakshadweep</li>
+                <li data-value="Madhya Pradesh">Madhya Pradesh</li>
+                <li data-value="Maharashtra" class="selected"><b>Maharashtra</b></li>
+                <li data-value="Manipur">Manipur</li>
+                <li data-value="Meghalaya">Meghalaya</li>
+                <li data-value="Mizoram">Mizoram</li>
+                <li data-value="Nagaland">Nagaland</li>
+                <li data-value="New Delhi">New Delhi</li>
+                <li data-value="Odisha">Odisha</li>
+                <li data-value="Pondicherry">Pondicherry</li>
+                <li data-value="Punjab">Punjab</li>
+                <li data-value="Rajasthan">Rajasthan</li>
+                <li data-value="Sikkim">Sikkim</li>
+                <li data-value="Tamil Nadu">Tamil Nadu</li>
+                <li data-value="Telangana">Telangana</li>
+                <li data-value="Tripura">Tripura</li>
+                <li data-value="Uttar Pradesh">Uttar Pradesh</li>
+                <li data-value="Uttarakhand">Uttarakhand</li>
+                <li data-value="West Bengal">West Bengal</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="field-group">
+            <div class="input-wrapper">
+              <input type="text" id="boardInput" required autocomplete="off" readonly>
+              <label>Electricity Board</label>
+              <i class="dropdown-icon">▼</i>
+            </div>
+            <div class="dropdown" id="boardDropdown">
+              <ul id="boardList"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
       <h3>Search Mode</h3>
       <div class="mode-selector">
         <label><input type="radio" name="mode" value="single" checked> Single Consumer</label>
