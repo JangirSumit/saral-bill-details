@@ -12,7 +12,13 @@
       <span id="statusText">Checking connection...</span>
     </div>
     
-    <div class="section">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="setup">Setup</button>
+      <button class="tab-btn" data-tab="processing">Processing</button>
+    </div>
+    
+    <div class="tab-content" id="setupTab">
+      <div class="section">
       <h3>Bill Setup</h3>
       <div class="bill-setup">
         <div class="service-type">
@@ -108,28 +114,33 @@
       <div id="fileStatus" class="status"></div>
     </div>
 
-    <div class="section" id="consumerSection" style="display: none;">
-      <h3>Consumer List</h3>
-      <div id="consumerList" class="consumer-list"></div>
-    </div>
-
-    <div class="section" id="controlSection" style="display: none;">
-      <h3>Process Bills</h3>
-      <div class="controls">
-        <button id="startBtn" class="btn-primary">Start Processing</button>
-        <button id="pauseBtn" class="btn-secondary" disabled>Pause</button>
-        <button id="stopBtn" class="btn-secondary" disabled>Stop</button>
       </div>
-      <div id="progress" class="progress">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-      <div id="status" class="status"></div>
     </div>
+    
+    <div class="tab-content" id="processingTab" style="display: none;">
+      <div class="section" id="consumerSection" style="display: none;">
+        <h3>Consumer List</h3>
+        <div id="consumerList" class="consumer-list"></div>
+      </div>
 
-    <div class="section" id="resultsSection" style="display: none;">
-      <h3>Results</h3>
-      <button id="downloadBtn" class="btn-primary">Download Results</button>
-      <div id="results" class="results"></div>
+      <div class="section" id="controlSection" style="display: none;">
+        <h3>Process Bills</h3>
+        <div class="controls">
+          <button id="startBtn" class="btn-primary">Start Processing</button>
+          <button id="pauseBtn" class="btn-secondary" disabled>Pause</button>
+          <button id="stopBtn" class="btn-secondary" disabled>Stop</button>
+        </div>
+        <div id="progress" class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="status" class="status"></div>
+      </div>
+
+      <div class="section" id="resultsSection" style="display: none;">
+        <h3>Results</h3>
+        <button id="downloadBtn" class="btn-primary">Download Results</button>
+        <div id="results" class="results"></div>
+      </div>
     </div>
   </div>
   

@@ -15,6 +15,7 @@ class BillProcessor {
   }
 
   bindEvents() {
+    this.setupTabs();
     this.setupBillSetup();
     document.querySelectorAll('input[name="mode"]').forEach(radio => {
       radio.addEventListener('change', this.handleModeChange.bind(this));
@@ -24,6 +25,29 @@ class BillProcessor {
     document.getElementById('pauseBtn').addEventListener('click', this.pauseProcessing.bind(this));
     document.getElementById('stopBtn').addEventListener('click', this.stopProcessing.bind(this));
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
+  }
+
+  setupTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tabName = e.target.dataset.tab;
+        this.switchTab(tabName);
+      });
+    });
+  }
+
+  switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    document.getElementById(`${tabName}Tab`).style.display = 'block';
   }
 
   setupBillSetup() {
@@ -142,6 +166,7 @@ class BillProcessor {
         this.displayConsumers();
         document.getElementById('consumerSection').style.display = 'block';
         document.getElementById('controlSection').style.display = 'block';
+        this.switchTab('processing');
       } else {
         this.consumers = [];
         document.getElementById('consumerSection').style.display = 'none';
@@ -166,6 +191,7 @@ class BillProcessor {
       status.textContent = `Loaded ${this.consumers.length} consumers`;
       document.getElementById('consumerSection').style.display = 'block';
       document.getElementById('controlSection').style.display = 'block';
+      this.switchTab('processing');
     } catch (error) {
       status.textContent = 'Error reading file: ' + error.message;
     }

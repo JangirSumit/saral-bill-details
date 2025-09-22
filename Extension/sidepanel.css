@@ -44,6 +44,45 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
+.tabs {
+  display: flex;
+  background: var(--white);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: var(--gray-light);
+  color: var(--gray-dark);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.tab-btn:hover:not(.active) {
+  background: var(--light-blue);
+  color: var(--primary-blue);
+}
+
+.tab-content {
+  display: block;
+}
+
+.tab-content[style*="display: none"] {
+  display: none !important;
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
