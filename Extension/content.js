@@ -214,7 +214,10 @@ class PaytmBillExtractor {
 
     if (stateInput) {
       stateInput.focus();
+      stateInput.click();
+      // Clear the field completely
       stateInput.value = "";
+      stateInput.dispatchEvent(new Event("input", { bubbles: true }));
       await this.delay(200);
 
       await this.typeText(stateInput, stateName);
