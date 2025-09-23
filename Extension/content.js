@@ -364,6 +364,7 @@ class PaytmBillExtractor {
     const billDetails = {
       name: this.extractFieldValue("Name"),
       dueDate: this.extractFieldValue("Due Date"),
+      billAmount: this.extractAmountFromTextbox(),
       billNumber: this.extractFieldValue("Bill Number"),
       billDate: this.extractFieldValue("Bill Date"),
       billPeriod: this.extractFieldValue("Bill Period"),
@@ -516,6 +517,27 @@ class PaytmBillExtractor {
     }
 
     return element.tagName.toLowerCase();
+  }
+
+  extractAmountFromTextbox() {
+    // Find Consumer Details div first
+    const consumerDetailsDiv = Array.from(document.querySelectorAll("div")).find(
+      (el) => el.textContent.includes("Consumer Details")
+    );
+    
+    if (consumerDetailsDiv) {
+      // Look for Amount input textbox after Consumer Details
+      const amountInput = Array.from(document.querySelectorAll('input[type="text"]')).find((input) => {
+        const label = input.parentElement?.querySelector("label");
+        return label && label.textContent.trim().includes("Amount");
+      });
+      
+      if (amountInput && amountInput.value) {
+        return amountInput.value.trim();
+      }
+    }
+    
+    return null;
   }
 
   delay(ms) {

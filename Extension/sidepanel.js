@@ -457,7 +457,7 @@ class BillProcessor {
   }
 
   resultsToCSV() {
-    const headers = ['Consumer Number', 'Consumer Name', 'Bill Holder Name', 'Due Date', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
+    const headers = ['Consumer Number', 'Consumer Name', 'Bill Holder Name', 'Due Date', 'Bill Amount', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
     const rows = [headers.join(',')];
     
     this.results.forEach(result => {
@@ -467,10 +467,11 @@ class BillProcessor {
       
       if (result.success) {
         rows.push([
-          consumerNumber,
+          `"${consumerNumber}"`,
           consumerName,
           result.data.name || '',
           result.data.dueDate || '',
+          result.data.billAmount || '',
           result.data.billNumber || '',
           result.data.billDate || '',
           result.data.billPeriod || '',
@@ -482,8 +483,9 @@ class BillProcessor {
         ].join(','));
       } else {
         rows.push([
-          consumerNumber,
+          `"${consumerNumber}"`,
           consumerName,
+          '',
           '',
           '',
           '',
