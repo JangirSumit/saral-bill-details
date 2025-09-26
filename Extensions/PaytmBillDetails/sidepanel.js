@@ -5,6 +5,8 @@ class BillProcessor {
     this.isProcessing = false;
     this.isPaused = false;
     this.results = [];
+    this.startTime = null;
+    this.timerInterval = null;
     this.init();
   }
 
@@ -278,6 +280,7 @@ class BillProcessor {
     this.isPaused = false;
     this.updateButtons();
     this.commonErrorShown = false;
+    this.startTimer();
     
     document.getElementById('status').textContent = 'Starting processing...';
     
@@ -335,6 +338,7 @@ class BillProcessor {
       details.innerHTML = `
         Name: ${result.name || 'N/A'}<br>
         Due Date: ${result.dueDate || 'N/A'}<br>
+        Bill Amount: ${result.billAmount || 'N/A'}<br>
         Bill Number: ${result.billNumber || 'N/A'}<br>
         Bill Type: ${result.billType || 'N/A'}
       `;
@@ -416,6 +420,7 @@ class BillProcessor {
     this.isProcessing = false;
     this.isPaused = false;
     this.currentIndex = 0;
+    this.stopTimer();
     this.updateButtons();
     document.getElementById('status').textContent = 'Processing stopped';
   }
@@ -424,8 +429,10 @@ class BillProcessor {
     this.isProcessing = false;
     this.isPaused = false;
     this.currentIndex = 0;
+    const finalTime = this.getFinalTime();
+    this.stopTimer();
     this.updateButtons();
-    document.getElementById('status').textContent = 'Processing completed';
+    document.getElementById('status').textContent = `Processing completed in ${finalTime}`;
     document.getElementById('resultsSection').style.display = 'block';
     document.getElementById('downloadIconBtn').style.display = 'block';
   }
@@ -589,6 +596,42 @@ class BillProcessor {
     
     this.updateButtons();
     this.switchTab('setup');
+  }
+
+  startTimer() {
+    this.startTime = Date.now();
+    document.getElementById('timerDisplay').style.display = 'block';
+    this.timerInterval = setInterval(() => {
+      this.updateTimer();
+    }, 1000);
+  }
+
+  updateTimer() {
+    if (this.startTime) {
+      const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      document.getElementById('timerText').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+  }
+
+  getFinalTime() {
+    if (this.startTime) {
+      const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return '00:00';
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    document.getElementById('timerDisplay').style.display = 'none';
   }
 
   getSetupConfiguration() {
