@@ -7,6 +7,8 @@ class BillProcessor {
     this.results = [];
     this.startTime = null;
     this.timerInterval = null;
+    this.successCount = 0;
+    this.failedCount = 0;
     this.init();
   }
 
@@ -278,9 +280,12 @@ class BillProcessor {
     
     this.isProcessing = true;
     this.isPaused = false;
+    this.successCount = 0;
+    this.failedCount = 0;
     this.updateButtons();
     this.commonErrorShown = false;
     this.startTimer();
+    this.updateStats();
     
     document.getElementById('status').textContent = 'Starting processing...';
     
@@ -294,6 +299,7 @@ class BillProcessor {
       this.currentIndex = i;
       await this.processConsumer(i);
       this.updateProgress();
+      this.updateStats();
     }
     
     if (this.isProcessing) {
@@ -329,6 +335,7 @@ class BillProcessor {
         data: result
       });
       
+      this.successCount++;
       item.className = 'consumer-item completed';
       item.querySelector('.status-indicator').textContent = 'Completed';
       
@@ -351,6 +358,7 @@ class BillProcessor {
         error: error.message
       });
       
+      this.failedCount++;
       item.className = 'consumer-item error';
       item.querySelector('.status-indicator').textContent = 'Error';
       
@@ -581,6 +589,8 @@ class BillProcessor {
     this.isProcessing = false;
     this.isPaused = false;
     this.results = [];
+    this.successCount = 0;
+    this.failedCount = 0;
     
     document.getElementById('consumerList').innerHTML = '';
     document.getElementById('progressBar').style.width = '0%';
@@ -588,6 +598,7 @@ class BillProcessor {
     document.getElementById('fileStatus').textContent = '';
     document.getElementById('singleConsumerInput').value = '';
     document.getElementById('fileInput').value = '';
+    document.getElementById('statsDisplay').style.display = 'none';
     
     document.getElementById('consumerSection').style.display = 'none';
     document.getElementById('controlSection').style.display = 'none';
@@ -632,6 +643,17 @@ class BillProcessor {
       this.timerInterval = null;
     }
     document.getElementById('timerDisplay').style.display = 'none';
+  }
+
+  updateStats() {
+    const total = this.consumers.length;
+    const remaining = total - this.currentIndex - (this.isProcessing ? 0 : 1);
+    
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('remainingCount').textContent = Math.max(0, remaining);
+    document.getElementById('successCount').textContent = this.successCount;
+    document.getElementById('failedCount').textContent = this.failedCount;
+    document.getElementById('statsDisplay').style.display = total > 0 ? 'block' : 'none';
   }
 
   getSetupConfiguration() {
