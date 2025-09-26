@@ -467,7 +467,7 @@ class BillProcessor {
       
       if (result.success) {
         rows.push([
-          `"${consumerNumber}"`,
+          `="${consumerNumber}"`,
           consumerName,
           result.data.name || '',
           result.data.dueDate || '',
@@ -483,7 +483,7 @@ class BillProcessor {
         ].join(','));
       } else {
         rows.push([
-          `"${consumerNumber}"`,
+          `="${consumerNumber}"`,
           consumerName,
           '',
           '',
