@@ -32,6 +32,7 @@ class BillProcessor {
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
     document.getElementById('downloadIconBtn').addEventListener('click', this.downloadResults.bind(this));
     document.getElementById('refreshBtn').addEventListener('click', this.refreshAll.bind(this));
+    document.getElementById('downloadSampleBtn').addEventListener('click', this.downloadSampleCSV.bind(this));
   }
 
   setupTabs() {
@@ -171,9 +172,12 @@ class BillProcessor {
     const updateConsumers = () => {
       const consumerNumber = consumerInput.value.trim();
       if (consumerNumber) {
+        const setup = this.getSetupConfiguration();
         this.consumers = [{
           consumerNumber: consumerNumber,
-          name: 'Single Consumer'
+          name: 'Single Consumer',
+          state: setup.state,
+          board: setup.board
         }];
         this.displayConsumers();
         document.getElementById('consumerSection').style.display = 'block';
@@ -227,7 +231,7 @@ class BillProcessor {
     
     if (lines.length < 2) throw new Error('CSV must have header and data rows');
     
-    const headers = lines[0].split(',').map(h => h.trim());
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     const consumers = [];
     
     for (let i = 1; i < lines.length; i++) {
@@ -236,7 +240,15 @@ class BillProcessor {
       headers.forEach((header, index) => {
         consumer[header] = values[index] || '';
       });
-      if (consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number) {
+      
+      // Normalize consumer number field
+      const consumerNumber = consumer.consumernumber || consumer.consumer_number || consumer['consumer number'];
+      if (consumerNumber) {
+        consumer.consumerNumber = consumerNumber;
+        consumer.name = consumer.name || consumer.consumer_name || consumer['consumer name'] || '';
+        consumer.state = consumer.state || '';
+        consumer.board = consumer.board || consumer.electricityboard || consumer['electricity board'] || '';
+        consumer.reference = consumer.reference || consumer.referencenumber || consumer['reference number'] || consumer.ref || '';
         consumers.push(consumer);
       }
     }
@@ -253,12 +265,26 @@ class BillProcessor {
       item.className = 'consumer-item';
       item.id = `consumer-${index}`;
       
-      const consumerNumber = consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number || 'N/A';
-      const name = consumer.name || consumer.Name || consumer.consumer_name || '';
+      const consumerNumber = consumer.consumerNumber || 'N/A';
+      const name = consumer.name || '';
+      const state = consumer.state || '';
+      const board = consumer.board || '';
+      const reference = consumer.reference || '';
+      
+      let headerText = consumerNumber;
+      if (reference) headerText += ` • ${reference}`;
+      
+      let subText = [];
+      if (name) subText.push(name);
+      if (state) subText.push(state);
+      if (board) subText.push(board);
       
       item.innerHTML = `
         <div class="consumer-header">
-          <span>${consumerNumber}${name ? ' - ' + name : ''}</span>
+          <div class="consumer-main">
+            <div class="consumer-title">${headerText}</div>
+            ${subText.length > 0 ? `<div class="consumer-subtitle">${subText.join(' • ')}</div>` : ''}
+          </div>
           <span class="status-indicator">Pending</span>
         </div>
         <div class="consumer-details" id="details-${index}" style="display: none;"></div>
@@ -319,8 +345,13 @@ class BillProcessor {
     
     try {
       console.log('Sending message to content script:', consumer);
-      // Get setup configuration
+      // Get setup configuration with consumer-specific overrides
       const setup = this.getSetupConfiguration();
+      if (consumer.state) setup.state = consumer.state;
+      if (consumer.board) {
+        // Strip parenthetical abbreviations from board name
+        setup.board = consumer.board.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      }
       
       // Send message to content script to fill form and get bill details
       const result = await this.sendToContentScript({
@@ -472,19 +503,44 @@ class BillProcessor {
     URL.revokeObjectURL(url);
   }
 
+  downloadSampleCSV() {
+    const sampleData = [
+      'reference,consumerNumber,name,state,board',
+      'REF001,1234567890,John Doe,Maharashtra,Maharashtra State Electricity Distribution Co. Ltd. (MSEDCL)',
+      'REF002,0987654321,Jane Smith,Gujarat,Uttar Gujarat Vij Company Ltd. (UGVCL)',
+      'REF003,1122334455,Sample User,Karnataka,Bangalore Electricity Supply Company Ltd. (BESCOM)'
+    ].join('\n');
+    
+    const blob = new Blob([sampleData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_consumers.csv';
+    a.click();
+    
+    URL.revokeObjectURL(url);
+  }
+
   resultsToCSV() {
-    const headers = ['Consumer Number', 'Consumer Name', 'Bill Holder Name', 'Due Date', 'Bill Amount', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
+    const headers = ['Consumer Number', 'Consumer Name', 'Reference', 'State', 'Board', 'Bill Holder Name', 'Due Date', 'Bill Amount', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
     const rows = [headers.join(',')];
     
     this.results.forEach(result => {
       const consumer = result.consumer;
-      const consumerNumber = consumer.consumerNumber || consumer.ConsumerNumber || consumer.consumer_number || '';
-      const consumerName = consumer.name || consumer.Name || consumer.consumer_name || '';
+      const consumerNumber = consumer.consumerNumber || '';
+      const consumerName = consumer.name || '';
+      const reference = consumer.reference || '';
+      const state = consumer.state || '';
+      const board = consumer.board || '';
       
       if (result.success) {
         rows.push([
           `="${consumerNumber}"`,
           consumerName,
+          reference,
+          state,
+          board,
           result.data.name || '',
           result.data.dueDate || '',
           result.data.billAmount || '',
@@ -501,6 +557,9 @@ class BillProcessor {
         rows.push([
           `="${consumerNumber}"`,
           consumerName,
+          reference,
+          state,
+          board,
           '',
           '',
           '',
@@ -648,7 +707,8 @@ class BillProcessor {
 
   updateStats() {
     const total = this.consumers.length;
-    const remaining = total - this.currentIndex - (this.isProcessing ? 0 : 1);
+    const processed = this.successCount + this.failedCount;
+    const remaining = total - processed;
     
     document.getElementById('totalCount').textContent = total;
     document.getElementById('remainingCount').textContent = Math.max(0, remaining);
@@ -660,7 +720,12 @@ class BillProcessor {
   getSetupConfiguration() {
     const serviceType = document.querySelector('input[name="serviceType"]:checked')?.value || 'electricity';
     const state = document.getElementById('stateInput')?.value || 'Maharashtra';
-    const board = document.getElementById('boardInput')?.value || '';
+    let board = document.getElementById('boardInput')?.value || '';
+    
+    // Strip parenthetical abbreviations from board name
+    if (board) {
+      board = board.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    }
     
     return {
       serviceType: serviceType,

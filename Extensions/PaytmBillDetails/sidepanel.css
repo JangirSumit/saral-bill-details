@@ -383,8 +383,34 @@ body {
 .consumer-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
+}
+
+.consumer-main {
+  flex: 1;
+}
+
+.consumer-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dark-blue);
+  margin-bottom: 2px;
+}
+
+.consumer-subtitle {
+  font-size: 10px;
+  color: var(--gray-dark);
+  line-height: 1.2;
+}
+
+.status-indicator {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--gray-light);
+  color: var(--gray-dark);
+  margin-top: 2px;
 }
 
 .controls {

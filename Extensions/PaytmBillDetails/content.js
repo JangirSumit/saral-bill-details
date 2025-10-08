@@ -362,7 +362,7 @@ class PaytmBillExtractor {
     await this.waitForBillDetails();
 
     const billDetails = {
-      name: this.extractFieldValue("Name"),
+      name: this.extractFieldValue("Consumer Name") || this.extractFieldValue("Name"),
       dueDate: this.extractFieldValue("Due Date"),
       billAmount: this.extractAmountFromTextbox(),
       billNumber: this.extractFieldValue("Bill Number"),
@@ -397,7 +397,6 @@ class PaytmBillExtractor {
   }
 
   extractFieldValue(fieldName) {
-    // Find all divs that contain the field name
     const labelDivs = Array.from(document.querySelectorAll("div")).filter(
       (div) => div.textContent.trim() === fieldName
     );
@@ -405,27 +404,27 @@ class PaytmBillExtractor {
     for (const labelDiv of labelDivs) {
       // Look for the value in the next sibling div
       const nextSibling = labelDiv.nextElementSibling;
-      if (nextSibling && nextSibling.textContent.trim()) {
+      if (nextSibling && nextSibling.textContent.trim() && nextSibling.textContent.trim() !== fieldName) {
         return nextSibling.textContent.trim();
+      }
+
+      // Look within the same parent container for paired divs
+      const parent = labelDiv.parentElement;
+      if (parent) {
+        const allDivs = Array.from(parent.querySelectorAll("div"));
+        const labelIndex = allDivs.indexOf(labelDiv);
+        if (labelIndex >= 0 && labelIndex + 1 < allDivs.length) {
+          const valueDiv = allDivs[labelIndex + 1];
+          if (valueDiv && valueDiv.textContent.trim() && valueDiv.textContent.trim() !== fieldName) {
+            return valueDiv.textContent.trim();
+          }
+        }
       }
 
       // Look for the value in parent's next sibling
       const parentNext = labelDiv.parentElement?.nextElementSibling;
-      if (parentNext && parentNext.textContent.trim()) {
+      if (parentNext && parentNext.textContent.trim() && parentNext.textContent.trim() !== fieldName) {
         return parentNext.textContent.trim();
-      }
-
-      // Look within the same parent container
-      const parent = labelDiv.parentElement;
-      if (parent) {
-        const allDivs = parent.querySelectorAll("div");
-        const labelIndex = Array.from(allDivs).indexOf(labelDiv);
-        if (labelIndex >= 0 && labelIndex + 1 < allDivs.length) {
-          const valueDiv = allDivs[labelIndex + 1];
-          if (valueDiv && valueDiv.textContent.trim() !== fieldName) {
-            return valueDiv.textContent.trim();
-          }
-        }
       }
     }
 
@@ -520,13 +519,24 @@ class PaytmBillExtractor {
   }
 
   extractAmountFromTextbox() {
-    // Find Consumer Details div first
+    // Look for div containing "Amount (Rs.)" text and extract span value
+    const allDivs = Array.from(document.querySelectorAll("div"));
+    
+    for (const div of allDivs) {
+      if (div.textContent && div.textContent.includes("Amount (Rs.)")) {
+        const span = div.querySelector("span");
+        if (span && span.textContent.trim()) {
+          return span.textContent.trim();
+        }
+      }
+    }
+    
+    // Fallback to original method - look for Amount input textbox
     const consumerDetailsDiv = Array.from(document.querySelectorAll("div")).find(
       (el) => el.textContent.includes("Consumer Details")
     );
     
     if (consumerDetailsDiv) {
-      // Look for Amount input textbox after Consumer Details
       const amountInput = Array.from(document.querySelectorAll('input[type="text"]')).find((input) => {
         const label = input.parentElement?.querySelector("label");
         return label && label.textContent.trim().includes("Amount");

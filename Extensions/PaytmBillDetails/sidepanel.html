@@ -160,15 +160,19 @@
         <div class="help-content">
           <p>Required columns:</p>
           <ul>
+            <li><strong>reference</strong> - Reference number for tracking (optional)</li>
             <li><strong>consumerNumber</strong> - The electricity consumer number</li>
             <li><strong>name</strong> - Consumer name (optional)</li>
+            <li><strong>state</strong> - State name (optional, uses setup default if not provided)</li>
+            <li><strong>board</strong> - Electricity board name (optional, uses setup default if not provided)</li>
           </ul>
           <p>Example CSV:</p>
           <div class="code-block">
-consumerNumber,name<br>
-1234567890,John Doe<br>
-0987654321,Jane Smith
+reference,consumerNumber,name,state,board<br>
+REF001,1234567890,John Doe,Maharashtra,Maharashtra State Electricity Distribution Co. Ltd. (MSEDCL)<br>
+REF002,0987654321,Jane Smith,Gujarat,Uttar Gujarat Vij Company Ltd. (UGVCL)
           </div>
+          <button id="downloadSampleBtn" class="btn-primary" style="margin-top: 10px;">Download Sample CSV</button>
         </div>
       </div>
       

@@ -37,8 +37,10 @@ async function sendTrustedEvent(tabId, eventData) {
     throw new Error('Debugger API not available');
   }
   
+  let wasAttached = false;
   try {
     await chrome.debugger.attach({ tabId }, '1.3');
+    wasAttached = true;
     await chrome.debugger.sendCommand({ tabId }, 'Runtime.evaluate', {
       expression: `
         const element = document.querySelector('${eventData.selector}');
@@ -47,8 +49,13 @@ async function sendTrustedEvent(tabId, eventData) {
         }
       `
     });
-    await chrome.debugger.detach({ tabId });
+    if (wasAttached) {
+      await chrome.debugger.detach({ tabId });
+    }
   } catch (error) {
+    if (wasAttached) {
+      try { await chrome.debugger.detach({ tabId }); } catch (e) {}
+    }
     console.error('Trusted event failed:', error);
     throw error;
   }
@@ -59,8 +66,10 @@ async function sendTrustedClick(tabId, selector) {
     throw new Error('Debugger API not available');
   }
   
+  let wasAttached = false;
   try {
     await chrome.debugger.attach({ tabId }, '1.3');
+    wasAttached = true;
     
     // Convert :contains() selector to XPath for better reliability
     let findExpression;
@@ -123,8 +132,13 @@ async function sendTrustedClick(tabId, selector) {
       throw new Error('Element not found for selector: ' + selector);
     }
     
-    await chrome.debugger.detach({ tabId });
+    if (wasAttached) {
+      await chrome.debugger.detach({ tabId });
+    }
   } catch (error) {
+    if (wasAttached) {
+      try { await chrome.debugger.detach({ tabId }); } catch (e) {}
+    }
     console.error('Trusted click failed:', error);
     throw error;
   }
@@ -135,8 +149,10 @@ async function typeWithKeyboardEvents(tabId, selector, text) {
     throw new Error('Debugger API not available');
   }
   
+  let wasAttached = false;
   try {
     await chrome.debugger.attach({ tabId }, '1.3');
+    wasAttached = true;
     
     // Convert :contains() selector to XPath for better reliability
     let findExpression;
@@ -184,8 +200,13 @@ async function typeWithKeyboardEvents(tabId, selector, text) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    await chrome.debugger.detach({ tabId });
+    if (wasAttached) {
+      await chrome.debugger.detach({ tabId });
+    }
   } catch (error) {
+    if (wasAttached) {
+      try { await chrome.debugger.detach({ tabId }); } catch (e) {}
+    }
     console.error('Trusted typing failed:', error);
     throw error;
   }
