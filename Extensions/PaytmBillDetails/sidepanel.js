@@ -16,6 +16,7 @@ class BillProcessor {
     this.bindEvents();
     this.checkConnection();
     this.startConnectionMonitoring();
+    this.loadBoardsReference();
   }
 
   bindEvents() {
@@ -666,6 +667,81 @@ class BillProcessor {
       state: state,
       board: board
     };
+  }
+
+  async loadBoardsReference() {
+    try {
+      const result = await chrome.storage.local.get(['electricityBoards']);
+      let boards = result.electricityBoards;
+      
+      if (!boards) {
+        const response = await fetch(chrome.runtime.getURL('boards.json'));
+        boards = await response.json();
+      }
+      
+      const container = document.getElementById('boardsReference');
+      container.innerHTML = '';
+      
+      Object.keys(boards).forEach(state => {
+        const stateDiv = document.createElement('div');
+        stateDiv.className = 'state-section';
+        
+        const header = document.createElement('div');
+        header.className = 'state-header';
+        
+        const stateName = document.createElement('span');
+        stateName.textContent = state;
+        stateName.style.cursor = 'pointer';
+        stateName.style.flex = '1';
+        stateName.onclick = () => {
+          const boardsDiv = stateDiv.querySelector('.state-boards');
+          boardsDiv.classList.toggle('show');
+        };
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.textContent = 'Copy';
+        copyBtn.onclick = (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(state);
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => copyBtn.textContent = 'Copy', 1000);
+        };
+        
+        header.appendChild(stateName);
+        header.appendChild(copyBtn);
+        
+        const boardsDiv = document.createElement('div');
+        boardsDiv.className = 'state-boards';
+        
+        boards[state].forEach(board => {
+          const boardItem = document.createElement('div');
+          boardItem.className = 'board-item';
+          
+          const boardName = document.createElement('span');
+          boardName.textContent = board;
+          
+          const boardCopyBtn = document.createElement('button');
+          boardCopyBtn.className = 'board-copy-btn';
+          boardCopyBtn.textContent = 'Copy';
+          boardCopyBtn.onclick = () => {
+            navigator.clipboard.writeText(board);
+            boardCopyBtn.textContent = 'Copied!';
+            setTimeout(() => boardCopyBtn.textContent = 'Copy', 1000);
+          };
+          
+          boardItem.appendChild(boardName);
+          boardItem.appendChild(boardCopyBtn);
+          boardsDiv.appendChild(boardItem);
+        });
+        
+        stateDiv.appendChild(header);
+        stateDiv.appendChild(boardsDiv);
+        container.appendChild(stateDiv);
+      });
+    } catch (error) {
+      document.getElementById('boardsReference').innerHTML = '<p>Error loading boards reference</p>';
+    }
   }
 }
 

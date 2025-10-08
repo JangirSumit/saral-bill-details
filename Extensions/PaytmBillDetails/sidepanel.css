@@ -466,6 +466,116 @@ body {
   text-align: center;
 }
 
+.help-content {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.help-content ul {
+  margin: 8px 0;
+  padding-left: 16px;
+}
+
+.help-content li {
+  margin-bottom: 4px;
+}
+
+.code-block {
+  background: var(--gray-light);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  margin: 8px 0;
+  border-left: 3px solid var(--primary-blue);
+}
+
+.help-tab {
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.boards-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.boards-reference {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 11px;
+  min-height: 0;
+}
+
+.state-section {
+  margin-bottom: 8px;
+  border: 1px solid var(--gray-medium);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.state-header {
+  background: var(--primary-blue);
+  color: var(--white);
+  padding: 6px 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copy-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: var(--white);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.state-boards {
+  padding: 8px;
+  background: var(--white);
+  display: none;
+}
+
+.state-boards.show {
+  display: block;
+}
+
+.board-item {
+  padding: 2px 0;
+  font-size: 10px;
+  color: var(--gray-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.board-copy-btn {
+  background: var(--light-blue);
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.board-copy-btn:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
 .status {
   font-size: 12px;
   color: var(--gray-dark);
