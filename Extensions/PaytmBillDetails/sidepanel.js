@@ -32,7 +32,11 @@ class BillProcessor {
     document.getElementById('downloadBtn').addEventListener('click', this.downloadResults.bind(this));
     document.getElementById('downloadIconBtn').addEventListener('click', this.downloadResults.bind(this));
     document.getElementById('refreshBtn').addEventListener('click', this.refreshAll.bind(this));
+    if (document.getElementById('goToHelpBtn')) {
+      document.getElementById('goToHelpBtn').addEventListener('click', () => this.switchTab('help'));
+    }
     document.getElementById('downloadSampleBtn').addEventListener('click', this.downloadSampleCSV.bind(this));
+    document.getElementById('goToHelpBtn').addEventListener('click', () => this.switchTab('help'));
   }
 
   setupTabs() {
@@ -84,6 +88,19 @@ class BillProcessor {
       if (e.target.tagName === 'LI') {
         document.getElementById('boardInput').value = e.target.dataset.value;
         this.hideDropdown('boardDropdown');
+        this.loadDistricts(document.getElementById('stateInput').value, e.target.dataset.value);
+      }
+    });
+    
+    // District dropdown
+    document.getElementById('districtInput').addEventListener('click', () => {
+      this.toggleDropdown('districtDropdown');
+    });
+    
+    document.getElementById('districtDropdown').addEventListener('click', (e) => {
+      if (e.target.tagName === 'LI') {
+        document.getElementById('districtInput').value = e.target.dataset.value;
+        this.hideDropdown('districtDropdown');
       }
     });
     
@@ -95,6 +112,7 @@ class BillProcessor {
       if (!e.target.closest('.field-group')) {
         this.hideDropdown('stateDropdown');
         this.hideDropdown('boardDropdown');
+        this.hideDropdown('districtDropdown');
       }
     });
   }
@@ -126,7 +144,11 @@ class BillProcessor {
       const boardList = document.getElementById('boardList');
       boardList.innerHTML = '';
       
-      const stateBoards = boards[state] || ['No electricity boards available'];
+      const stateBoards = boards[state] || [];
+      if (stateBoards.length === 0) {
+        boardList.innerHTML = '<li>No electricity boards available</li>';
+        return;
+      }
       stateBoards.forEach(board => {
         const li = document.createElement('li');
         li.dataset.value = board;
@@ -136,10 +158,48 @@ class BillProcessor {
       
       // Clear board input when state changes
       document.getElementById('boardInput').value = '';
+      document.getElementById('districtGroup').style.display = 'none';
+      document.getElementById('districtInput').value = '';
     } catch (error) {
       console.error('Error loading electricity boards:', error);
       const boardList = document.getElementById('boardList');
       boardList.innerHTML = '<li>Error loading boards</li>';
+    }
+  }
+
+  async loadDistricts(state, board) {
+    try {
+      // Force refresh from JSON file to get latest districts
+      const response = await fetch(chrome.runtime.getURL('boards.json'));
+      const boards = await response.json();
+      // Update storage with latest data
+      await chrome.storage.local.set({ electricityBoards: boards });
+      
+      console.log('Loading districts for:', state, board);
+      console.log('Available districts:', boards.districts?.[state]?.[board]);
+      
+      const districts = boards.districts?.[state]?.[board];
+      const districtGroup = document.getElementById('districtGroup');
+      const districtList = document.getElementById('districtList');
+      
+      if (districts && districts.length > 0) {
+        console.log('Showing district dropdown with', districts.length, 'districts');
+        districtGroup.style.display = 'block';
+        districtList.innerHTML = '';
+        
+        districts.forEach(district => {
+          const li = document.createElement('li');
+          li.dataset.value = district;
+          li.textContent = district;
+          districtList.appendChild(li);
+        });
+      } else {
+        console.log('No districts found, hiding dropdown');
+        districtGroup.style.display = 'none';
+        document.getElementById('districtInput').value = '';
+      }
+    } catch (error) {
+      console.error('Error loading districts:', error);
     }
   }
 
@@ -177,7 +237,8 @@ class BillProcessor {
           consumerNumber: consumerNumber,
           name: 'Single Consumer',
           state: setup.state,
-          board: setup.board
+          board: setup.board,
+          district: setup.district || ''
         }];
         this.displayConsumers();
         document.getElementById('consumerSection').style.display = 'block';
@@ -248,6 +309,7 @@ class BillProcessor {
         consumer.name = consumer.name || consumer.consumer_name || consumer['consumer name'] || '';
         consumer.state = consumer.state || '';
         consumer.board = consumer.board || consumer.electricityboard || consumer['electricity board'] || '';
+        consumer.district = consumer.district || consumer.districttype || consumer['district type'] || consumer.type || '';
         consumer.reference = consumer.reference || consumer.referencenumber || consumer['reference number'] || consumer.ref || '';
         consumers.push(consumer);
       }
@@ -269,6 +331,7 @@ class BillProcessor {
       const name = consumer.name || '';
       const state = consumer.state || '';
       const board = consumer.board || '';
+      const district = consumer.district || '';
       const reference = consumer.reference || '';
       
       let headerText = consumerNumber;
@@ -278,6 +341,7 @@ class BillProcessor {
       if (name) subText.push(name);
       if (state) subText.push(state);
       if (board) subText.push(board);
+      if (district) subText.push(district);
       
       item.innerHTML = `
         <div class="consumer-header">
@@ -394,13 +458,10 @@ class BillProcessor {
       item.className = 'consumer-item error';
       item.querySelector('.status-indicator').textContent = 'Error';
       
-      // Show common error only once for field validation errors
+      // Show common error only once for field validation errors but continue processing
       if (error.message.includes('Required fields not available') && !this.commonErrorShown) {
-        document.getElementById('status').textContent = error.message;
+        document.getElementById('status').textContent = error.message + ' - Continuing with other records';
         this.commonErrorShown = true;
-        // Stop processing for this type of error
-        this.stopProcessing();
-        return;
       }
       
       // Show error details inline for other errors
@@ -505,10 +566,10 @@ class BillProcessor {
 
   downloadSampleCSV() {
     const sampleData = [
-      'reference,consumerNumber,name,state,board',
-      'REF001,1234567890,John Doe,Maharashtra,Maharashtra State Electricity Distribution Co. Ltd. (MSEDCL)',
-      'REF002,0987654321,Jane Smith,Gujarat,Uttar Gujarat Vij Company Ltd. (UGVCL)',
-      'REF003,1122334455,Sample User,Karnataka,Bangalore Electricity Supply Company Ltd. (BESCOM)'
+      'reference,consumerNumber,name,state,board,district',
+      'REF001,1234567890,John Doe,Maharashtra,Mahavitran - Maharastra (MSEDCL),',
+      'REF002,0987654321,Jane Smith,Gujarat,Uttar Gujarat Vij (UGVCL),',
+      'REF003,1122334455,Sample User,Uttar Pradesh,Uttar Pradesh Power (UPPCL),Agra - DVVNL'
     ].join('\n');
     
     const blob = new Blob([sampleData], { type: 'text/csv' });
@@ -523,7 +584,7 @@ class BillProcessor {
   }
 
   resultsToCSV() {
-    const headers = ['Consumer Number', 'Consumer Name', 'Reference', 'State', 'Board', 'Bill Holder Name', 'Due Date', 'Bill Amount', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
+    const headers = ['Consumer Number', 'Consumer Name', 'Reference', 'State', 'Board', 'District/Type', 'Bill Holder Name', 'Due Date', 'Bill Amount', 'Bill Number', 'Bill Date', 'Bill Period', 'Early Payment Date', 'Bill Type', 'Bill Month', 'Error', 'Status'];
     const rows = [headers.join(',')];
     
     this.results.forEach(result => {
@@ -533,6 +594,7 @@ class BillProcessor {
       const reference = consumer.reference || '';
       const state = consumer.state || '';
       const board = consumer.board || '';
+      const district = consumer.district || '';
       
       if (result.success) {
         rows.push([
@@ -541,6 +603,7 @@ class BillProcessor {
           reference,
           state,
           board,
+          district,
           result.data.name || '',
           result.data.dueDate || '',
           result.data.billAmount || '',
@@ -560,6 +623,7 @@ class BillProcessor {
           reference,
           state,
           board,
+          district,
           '',
           '',
           '',
@@ -721,6 +785,7 @@ class BillProcessor {
     const serviceType = document.querySelector('input[name="serviceType"]:checked')?.value || 'electricity';
     const state = document.getElementById('stateInput')?.value || 'Maharashtra';
     let board = document.getElementById('boardInput')?.value || '';
+    const district = document.getElementById('districtInput')?.value || '';
     
     // Strip parenthetical abbreviations from board name
     if (board) {
@@ -730,7 +795,8 @@ class BillProcessor {
     return {
       serviceType: serviceType,
       state: state,
-      board: board
+      board: board,
+      district: district
     };
   }
 
@@ -747,7 +813,8 @@ class BillProcessor {
       const container = document.getElementById('boardsReference');
       container.innerHTML = '';
       
-      Object.keys(boards).forEach(state => {
+      // Filter out 'districts' key and only show state boards
+      Object.keys(boards).filter(key => key !== 'districts').forEach(state => {
         const stateDiv = document.createElement('div');
         stateDiv.className = 'state-section';
         
@@ -797,6 +864,67 @@ class BillProcessor {
           
           boardItem.appendChild(boardName);
           boardItem.appendChild(boardCopyBtn);
+          
+          // Add districts for UPPCL
+          if (state === 'Uttar Pradesh' && board === 'Uttar Pradesh Power (UPPCL)') {
+            const districts = boards.districts?.[state]?.[board];
+            if (districts && districts.length > 0) {
+              const districtsContainer = document.createElement('div');
+              districtsContainer.className = 'districts-container';
+              districtsContainer.style.marginTop = '8px';
+              
+              const districtsHeader = document.createElement('div');
+              districtsHeader.style.fontSize = '12px';
+              districtsHeader.style.fontWeight = 'bold';
+              districtsHeader.style.marginBottom = '4px';
+              districtsHeader.textContent = `Districts (${districts.length}):`;
+              
+              const districtsList = document.createElement('div');
+              districtsList.className = 'districts-grid';
+              districtsList.style.display = 'grid';
+              districtsList.style.gridTemplateColumns = '1fr auto';
+              districtsList.style.gap = '2px';
+              districtsList.style.fontSize = '11px';
+              districtsList.style.maxHeight = '120px';
+              districtsList.style.overflowY = 'auto';
+              
+              districts.forEach(district => {
+                const districtItem = document.createElement('div');
+                districtItem.style.display = 'contents';
+                
+                const districtName = document.createElement('span');
+                districtName.textContent = district;
+                districtName.style.padding = '2px 4px';
+                districtName.style.backgroundColor = '#f5f5f5';
+                districtName.style.borderRadius = '3px';
+                districtName.style.marginRight = '4px';
+                
+                const districtCopyBtn = document.createElement('button');
+                districtCopyBtn.textContent = 'Copy';
+                districtCopyBtn.style.fontSize = '10px';
+                districtCopyBtn.style.padding = '1px 6px';
+                districtCopyBtn.style.border = '1px solid #ddd';
+                districtCopyBtn.style.borderRadius = '3px';
+                districtCopyBtn.style.backgroundColor = '#fff';
+                districtCopyBtn.style.cursor = 'pointer';
+                districtCopyBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(district);
+                  districtCopyBtn.textContent = 'Copied!';
+                  setTimeout(() => districtCopyBtn.textContent = 'Copy', 1000);
+                };
+                
+                districtItem.appendChild(districtName);
+                districtItem.appendChild(districtCopyBtn);
+                districtsList.appendChild(districtItem);
+              });
+              
+              districtsContainer.appendChild(districtsHeader);
+              districtsContainer.appendChild(districtsList);
+              boardItem.appendChild(districtsContainer);
+            }
+          }
+          
           boardsDiv.appendChild(boardItem);
         });
         

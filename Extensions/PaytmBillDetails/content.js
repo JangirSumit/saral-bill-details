@@ -89,6 +89,15 @@ class PaytmBillExtractor {
       missingFields.push("Electricity Board");
     }
 
+    // Check for District/Type field (optional - only for certain states)
+    const districtInput = Array.from(
+      document.querySelectorAll('input[type="text"]')
+    ).find((input) => {
+      const label = input.parentElement?.querySelector("label");
+      return label && label.textContent.trim() === "District/Type";
+    });
+    // Note: District/Type is optional, so we don't add it to missing fields
+
     if (missingFields.length > 0) {
       throw new Error(
         `Required fields not available: ${missingFields.join(
@@ -182,7 +191,12 @@ class PaytmBillExtractor {
       await this.selectElectricityBoardFromDropdown(setup.board);
     }
 
-    // 4. Wait for form to fully load after selections
+    // 4. Select district/type if provided
+    if (setup.district) {
+      await this.selectDistrictFromDropdown(setup.district);
+    }
+
+    // 5. Wait for form to fully load after selections
     await this.delay(2000);
   }
 
@@ -292,6 +306,58 @@ class PaytmBillExtractor {
       console.log(
         "Electricity board input not found or no board name provided"
       );
+    }
+  }
+
+  async selectDistrictFromDropdown(districtName) {
+    await this.delay(1000);
+
+    const districtInput = Array.from(
+      document.querySelectorAll('input[type="text"]')
+    ).find((input) => {
+      const label = input.parentElement?.querySelector("label");
+      return label && label.textContent.trim() === "District/Type";
+    });
+
+    if (districtInput && districtName) {
+      console.log('Found district input, clicking to open dropdown');
+      districtInput.focus();
+      districtInput.click();
+      await this.delay(1000);
+
+      // Look for district option in spans within the district dropdown area
+      // Find the dropdown container first
+      const dropdownContainer = districtInput.closest('li') || districtInput.parentElement;
+      const districtSpans = dropdownContainer ? 
+        Array.from(dropdownContainer.querySelectorAll('span')) :
+        Array.from(document.querySelectorAll('span'));
+      
+      const districtOption = districtSpans.find(
+        (span) => span.textContent.trim() === districtName
+      );
+
+      if (districtOption) {
+        console.log('Found district option:', districtOption, 'Text:', districtOption.textContent);
+        try {
+          // Use regular click first as it's more reliable for span elements
+          districtOption.click();
+          console.log("Selected district:", districtName);
+        } catch (error) {
+          console.log("Regular click failed, trying trusted click:", error.message);
+          try {
+            const selector = this.getElementSelector(districtOption);
+            await this.sendTrustedClick(selector);
+          } catch (trustedError) {
+            console.log("Trusted click also failed:", trustedError.message);
+          }
+        }
+        await this.delay(1000);
+      } else {
+        console.log("District option not found:", districtName);
+        console.log('Available district options:', districtSpans.map(s => s.textContent.trim()));
+      }
+    } else {
+      console.log("District input not found or no district name provided");
     }
   }
 

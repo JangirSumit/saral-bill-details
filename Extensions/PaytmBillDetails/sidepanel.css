@@ -654,3 +654,22 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gray-dark);
 }
+
+.help-note {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f0f8ff;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
