@@ -54,14 +54,13 @@ function waitForPageLoad() {
 async function fillBillForm(data) {
   // Click district selector first
   console.log('📍 Clicking district selector');
-  const districtSelector = document.querySelector('mat-select[name="discomSelect"] .mat-mdc-select-arrow-wrapper');
+  const districtSelector = await waitForElement('mat-select[name="discomSelect"] .mat-mdc-select-arrow-wrapper');
   if (districtSelector) {
     districtSelector.click();
-    await delay(2000);
     
     // Find and click the district option
     console.log('📍 Selecting district:', data.district);
-    const listbox = document.querySelector('div[role="listbox"]');
+    const listbox = await waitForElement('div[role="listbox"]');
     if (listbox) {
       const options = listbox.querySelectorAll('mat-option');
       for (const option of options) {
@@ -73,28 +72,26 @@ async function fillBillForm(data) {
     }
   }
   
-  await delay(2000);
+  await delay(1000);
 
   // Select DISCOM by abbreviation
   const discomAbbr = data.discom.match(/\(([^)]+)\)/)?.[1] || data.discom;
   console.log('⚡ Selecting DISCOM:', discomAbbr);
-  const discomElement = document.querySelector(`#${discomAbbr}`);
+  const discomElement = await waitForElement(`#${discomAbbr}`);
   if (discomElement) {
     discomElement.click();
   }
 
   // Fill consumer number
-  await delay(500);
   console.log('🔢 Filling consumer number:', data.consumerNumber);
-  const consumerInput = document.querySelector('input[placeholder="Account Number (Required)"]');
+  const consumerInput = await waitForElement('input[placeholder="Account Number (Required)"]');
   if (consumerInput) {
     consumerInput.value = data.consumerNumber;
     consumerInput.dispatchEvent(new Event('input'));
   }
   
   // Fill captcha with random 2-digit number
-  await delay(500);
-  const captchaInput = document.querySelector('#captchaInput');
+  const captchaInput = await waitForElement('#captchaInput');
   if (captchaInput) {
     const randomCaptcha = Math.floor(Math.random() * 90) + 10;
     console.log('🔐 Filling captcha:', randomCaptcha);
@@ -103,55 +100,53 @@ async function fillBillForm(data) {
   }
   
   // Click submit button
-  await delay(500);
   console.log('📤 Clicking submit button');
-  const submitButton = document.querySelector('button[type="submit"]');
+  const submitButton = await waitForElement('button[type="submit"]');
   if (submitButton) {
     submitButton.click();
   }
   
-  // Wait 5 seconds and click View Bill button
-  await delay(5000);
-  console.log('📄 Clicking View Bill button');
-  const viewBillButton = document.querySelector('button.btn.btn-prim.memuBtn');
+  // Wait and click View Bill button
+  console.log('📄 Waiting for View Bill button');
+  const viewBillButton = await waitForElement('button.btn.btn-prim.memuBtn');
   if (viewBillButton && viewBillButton.textContent.trim() === 'View Bill') {
     viewBillButton.click();
   }
   
   // Wait for dialog and click Download Bill button
   console.log('⏳ Waiting for OTP dialog');
-  await waitForElement('app-validate-mobile-otp-dialog');
-  await delay(1000);
-  console.log('📥 Clicking Download Bill button');
-  const downloadBillButton = [...document.querySelectorAll('app-validate-mobile-otp-dialog button')]
-    .find(b => b.textContent.trim() === 'Download Bill');
-  if (downloadBillButton) {
-    downloadBillButton.click();
+  const dialog = await waitForElement('app-validate-mobile-otp-dialog');
+  if (dialog) {
+    await delay(1000);
+    console.log('📥 Clicking Download Bill button');
+    const downloadBillButton = [...dialog.querySelectorAll('button')]
+      .find(b => b.textContent.trim() === 'Download Bill');
+    if (downloadBillButton) {
+      downloadBillButton.click();
+    }
   }
   
   // Close dialog
-  await delay(2000);
-  console.log('❌ Closing dialog');
-  const closeButton = document.querySelector('button[mat-dialog-close].close');
+  console.log('❌ Waiting for close button');
+  const closeButton = await waitForElement('button[mat-dialog-close].close');
   if (closeButton) {
     closeButton.click();
   }
   
   // Wait and click Back button
-  await delay(2000);
-  console.log('⬅️ Clicking Back button');
-  const backButton = document.querySelector('button.btn.btn-sec');
+  console.log('⬅️ Waiting for Back button');
+  const backButton = await waitForElement('button.btn.btn-sec');
   if (backButton && backButton.textContent.trim() === 'Back') {
     backButton.click();
   }
   
   // Wait for navigation back to home
   console.log('🏠 Navigating back to home');
-  await delay(3000);
+  await delay(2000);
 }
 
-function waitForElement(selector, timeout = 5000) {
-  return new Promise((resolve, reject) => {
+function waitForElement(selector, timeout = 10000) {
+  return new Promise((resolve) => {
     const element = document.querySelector(selector);
     if (element) {
       resolve(element);
@@ -173,17 +168,17 @@ function waitForElement(selector, timeout = 5000) {
 
     setTimeout(() => {
       observer.disconnect();
-      reject(new Error(`Element ${selector} not found within ${timeout}ms`));
+      resolve(null);
     }, timeout);
   });
 }
 
 async function submitAndGetBill() {
   // Find and click submit button
-  const submitBtn = document.querySelector('input[type="submit"]') ||
-                   document.querySelector('button[type="submit"]') ||
-                   document.querySelector('.btn-submit') ||
-                   document.querySelector('#submit');
+  const submitBtn = await waitForElement('input[type="submit"]') ||
+                   await waitForElement('button[type="submit"]') ||
+                   await waitForElement('.btn-submit') ||
+                   await waitForElement('#submit');
 
   if (!submitBtn) {
     throw new Error('Submit button not found');
@@ -195,11 +190,11 @@ async function submitAndGetBill() {
   await delay(2000);
 
   // Extract bill data from the page
-  const billData = extractBillData();
+  const billData = await extractBillData();
   return billData;
 }
 
-function extractBillData() {
+async function extractBillData() {
   // This function extracts bill information from the UPPCL response page
   // Adjust selectors based on actual UPPCL page structure
   
@@ -215,7 +210,7 @@ function extractBillData() {
   };
 
   for (const [key, selector] of Object.entries(selectors)) {
-    const element = document.querySelector(selector);
+    const element = await waitForElement(selector, 2000);
     if (element) {
       billInfo[key] = element.textContent.trim();
     }
@@ -223,7 +218,7 @@ function extractBillData() {
 
   // If no specific data found, capture general bill information
   if (Object.keys(billInfo).length === 0) {
-    const billTable = document.querySelector('table') || document.querySelector('.bill-details');
+    const billTable = await waitForElement('table', 2000) || await waitForElement('.bill-details', 2000);
     if (billTable) {
       billInfo.rawData = billTable.outerHTML;
     }
