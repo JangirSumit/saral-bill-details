@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>UPPCL Bill Fetcher</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>UPPCL Bill Details</h2>
+      <div id="connection-status" class="status-disconnected">Disconnected</div>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab-button active" data-tab="settings">Settings</button>
+      <button class="tab-button" data-tab="processing">Processing</button>
+      <button class="tab-button" data-tab="help">Help</button>
+    </div>
+
+    <div id="settings" class="tab-content active">
+      <div class="fetch-mode">
+        <label>
+          <input type="radio" name="mode" value="manual" checked> Manual
+        </label>
+        <label>
+          <input type="radio" name="mode" value="bulk"> Bulk
+        </label>
+      </div>
+
+      <div id="manual-form" class="form-section">
+        <div class="field">
+          <label>District:</label>
+          <select id="district">
+            <option value="">Select District</option>
+          </select>
+        </div>
+        
+        <div class="field">
+          <label>DISCOM:</label>
+          <select id="discom">
+            <option value="">Select DISCOM</option>
+          </select>
+        </div>
+        
+        <div class="field">
+          <label>Consumer Number:</label>
+          <input type="text" id="consumer-number" placeholder="Enter consumer number">
+        </div>
+        
+        <button id="fetch-manual" class="btn-primary">Fetch Bill Details</button>
+      </div>
+
+      <div id="bulk-form" class="form-section hidden">
+        <div class="field">
+          <label>Upload CSV File:</label>
+          <div class="file-upload-area" id="file-upload-area">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">
+              <span class="upload-main">Drop CSV file here or click to browse</span>
+              <span class="upload-sub">CSV should contain: District, DISCOM, Consumer Number</span>
+            </div>
+            <input type="file" id="csv-file" accept=".csv" hidden>
+          </div>
+          <div id="file-info" class="file-info hidden"></div>
+        </div>
+        
+        <button id="fetch-bulk" class="btn-primary">Process Bulk</button>
+      </div>
+    </div>
+
+    <div id="processing" class="tab-content">
+      <div class="progress-section">
+        <h3>Processing Status</h3>
+        
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Progress:</span>
+            <span id="progress-counter">0 / 0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Session Time:</span>
+            <span id="session-time">00:00</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Remaining:</span>
+            <span id="remaining-time">--:--</span>
+          </div>
+        </div>
+        
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+          <div class="progress-percentage" id="progress-percentage">0%</div>
+        </div>
+        
+        <div id="consumer-list-container">
+          <h4>Consumer Numbers:</h4>
+          <div id="consumer-list"></div>
+        </div>
+        
+        <div id="results-container">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4>Results:</h4>
+            <button id="download-csv" class="btn-download" disabled>Download CSV</button>
+          </div>
+          <div id="results-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="help" class="tab-content">
+      <div class="help-section">
+        <h3>How to Use</h3>
+        <h4>Manual Mode:</h4>
+        <ul>
+          <li>Select District and DISCOM</li>
+          <li>Enter Consumer Number</li>
+          <li>Click "Fetch Bill Details"</li>
+        </ul>
+        
+        <h4>Bulk Mode:</h4>
+        <ul>
+          <li>Prepare CSV with columns: District, DISCOM, Consumer Number</li>
+          <li>Upload the CSV file</li>
+          <li>Click "Process Bulk"</li>
+        </ul>
+        
+        <h4>CSV Format Example:</h4>
+        <pre>District,DISCOM,Consumer Number
+Lucknow,Dakshin Vidyut Vitran Nigam Limited (DVVNL),1234567890
+Kanpur Nagar,Kanpur Electricity Supply Company (KESCO),0987654321</pre>
+        
+        <button id="download-sample" class="btn-download" style="margin-top: 16px;">Download Sample CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "UPPCL Bill Details Fetcher",
+  "version": "1.0",
+  "description": "Fetch UPPCL bill details manually or in bulk",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "host_permissions": [
+    "https://consumer.uppcl.org/*"
+  ],
+
+  "action": {
+    "default_title": "Open UPPCL Bill Fetcher"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "activeTab",
+    "storage",
+    "downloads"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://consumer.uppcl.org/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
