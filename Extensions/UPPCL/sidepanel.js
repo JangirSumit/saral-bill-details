@@ -100,6 +100,23 @@ document.addEventListener('DOMContentLoaded', function() {
     await fetchBillDetails([{ district, discom, consumerNumber }]);
   });
 
+  // File upload area click
+  document.getElementById('file-upload-area').addEventListener('click', () => {
+    document.getElementById('csv-file').click();
+  });
+  
+  // File input change
+  document.getElementById('csv-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const fileInfo = document.getElementById('file-info');
+    if (file) {
+      fileInfo.textContent = `Selected: ${file.name}`;
+      fileInfo.classList.remove('hidden');
+    } else {
+      fileInfo.classList.add('hidden');
+    }
+  });
+
   // Bulk fetch
   document.getElementById('fetch-bulk').addEventListener('click', async () => {
     const fileInput = document.getElementById('csv-file');
@@ -110,8 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const csvData = await parseCSV(file);
-    await fetchBillDetails(csvData);
+    try {
+      const csvData = await parseCSV(file);
+      await fetchBillDetails(csvData);
+    } catch (error) {
+      alert('CSV Error: ' + error.message);
+    }
   });
   
   // Download sample CSV
@@ -127,12 +148,28 @@ function parseCSV(file) {
     reader.onload = function(e) {
       const csv = e.target.result;
       const lines = csv.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      
+      // Validate required columns
+      const requiredColumns = ['district', 'discom', 'consumer number'];
+      const missingColumns = requiredColumns.filter(col => 
+        !headers.some(header => header.includes(col.toLowerCase()))
+      );
+      
+      if (missingColumns.length > 0) {
+        reject(new Error(`Missing required columns: ${missingColumns.join(', ')}. Expected: District, DISCOM, Consumer Number`));
+        return;
+      }
+      
       const data = [];
-
       for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim()) {
           const values = lines[i].split(',').map(v => v.trim());
+          if (values.length < 3) {
+            reject(new Error(`Row ${i + 1} has insufficient columns. Expected 3 columns: District, DISCOM, Consumer Number`));
+            return;
+          }
+          
           data.push({
             district: values[0],
             discom: values[1],
@@ -140,9 +177,15 @@ function parseCSV(file) {
           });
         }
       }
+      
+      if (data.length === 0) {
+        reject(new Error('CSV file contains no valid data rows'));
+        return;
+      }
+      
       resolve(data);
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('Failed to read CSV file'));
     reader.readAsText(file);
   });
 }

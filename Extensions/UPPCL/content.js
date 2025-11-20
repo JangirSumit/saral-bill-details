@@ -16,20 +16,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function fetchBillFromSite(data) {
   try {
+    console.log('🚀 Starting bill fetch for consumer:', data.consumerNumber);
+    
     // Navigate to bill payment page if not already there
     if (!window.location.href.includes('pay_bill_home')) {
+      console.log('📍 Navigating to bill payment page');
       window.location.href = 'https://consumer.uppcl.org/wss/pay_bill_home';
       await waitForPageLoad();
     }
 
     // Fill form fields
+    console.log('📝 Filling form fields');
     await fillBillForm(data);
     
     // Submit form and get results
+    console.log('📊 Extracting bill data');
     const billData = await submitAndGetBill();
     
+    console.log('✅ Bill fetch completed successfully');
     return { success: true, data: billData };
   } catch (error) {
+    console.error('❌ Bill fetch failed:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -46,12 +53,14 @@ function waitForPageLoad() {
 
 async function fillBillForm(data) {
   // Click district selector first
+  console.log('📍 Clicking district selector');
   const districtSelector = document.querySelector('mat-select[name="discomSelect"] .mat-mdc-select-arrow-wrapper');
   if (districtSelector) {
     districtSelector.click();
     await delay(2000);
     
     // Find and click the district option
+    console.log('📍 Selecting district:', data.district);
     const listbox = document.querySelector('div[role="listbox"]');
     if (listbox) {
       const options = listbox.querySelectorAll('mat-option');
@@ -68,6 +77,7 @@ async function fillBillForm(data) {
 
   // Select DISCOM by abbreviation
   const discomAbbr = data.discom.match(/\(([^)]+)\)/)?.[1] || data.discom;
+  console.log('⚡ Selecting DISCOM:', discomAbbr);
   const discomElement = document.querySelector(`#${discomAbbr}`);
   if (discomElement) {
     discomElement.click();
@@ -75,6 +85,7 @@ async function fillBillForm(data) {
 
   // Fill consumer number
   await delay(500);
+  console.log('🔢 Filling consumer number:', data.consumerNumber);
   const consumerInput = document.querySelector('input[placeholder="Account Number (Required)"]');
   if (consumerInput) {
     consumerInput.value = data.consumerNumber;
@@ -86,12 +97,14 @@ async function fillBillForm(data) {
   const captchaInput = document.querySelector('#captchaInput');
   if (captchaInput) {
     const randomCaptcha = Math.floor(Math.random() * 90) + 10;
+    console.log('🔐 Filling captcha:', randomCaptcha);
     captchaInput.value = randomCaptcha;
     captchaInput.dispatchEvent(new Event('input'));
   }
   
   // Click submit button
   await delay(500);
+  console.log('📤 Clicking submit button');
   const submitButton = document.querySelector('button[type="submit"]');
   if (submitButton) {
     submitButton.click();
@@ -99,19 +112,42 @@ async function fillBillForm(data) {
   
   // Wait 5 seconds and click View Bill button
   await delay(5000);
+  console.log('📄 Clicking View Bill button');
   const viewBillButton = document.querySelector('button.btn.btn-prim.memuBtn');
   if (viewBillButton && viewBillButton.textContent.trim() === 'View Bill') {
     viewBillButton.click();
   }
   
   // Wait for dialog and click Download Bill button
+  console.log('⏳ Waiting for OTP dialog');
   await waitForElement('app-validate-mobile-otp-dialog');
   await delay(1000);
+  console.log('📥 Clicking Download Bill button');
   const downloadBillButton = [...document.querySelectorAll('app-validate-mobile-otp-dialog button')]
     .find(b => b.textContent.trim() === 'Download Bill');
   if (downloadBillButton) {
     downloadBillButton.click();
   }
+  
+  // Close dialog
+  await delay(2000);
+  console.log('❌ Closing dialog');
+  const closeButton = document.querySelector('button[mat-dialog-close].close');
+  if (closeButton) {
+    closeButton.click();
+  }
+  
+  // Wait and click Back button
+  await delay(2000);
+  console.log('⬅️ Clicking Back button');
+  const backButton = document.querySelector('button.btn.btn-sec');
+  if (backButton && backButton.textContent.trim() === 'Back') {
+    backButton.click();
+  }
+  
+  // Wait for navigation back to home
+  console.log('🏠 Navigating back to home');
+  await delay(3000);
 }
 
 function waitForElement(selector, timeout = 5000) {
