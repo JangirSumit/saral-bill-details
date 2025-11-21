@@ -31,7 +31,7 @@ body {
 }
 
 .container {
-  padding: 20px;
+  padding: 12px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -39,18 +39,11 @@ body {
 
 .header {
   text-align: center;
-  margin-bottom: 24px;
-  padding: 16px;
+  margin-bottom: 12px;
+  padding: 8px;
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
-}
-
-.header h2 {
-  color: var(--primary-color);
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
 }
 
 #connection-status {
@@ -74,7 +67,7 @@ body {
 
 .tabs {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   background: white;
   border-radius: 12px;
   padding: 4px;
@@ -118,7 +111,7 @@ body {
 .fetch-mode {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 15px;
   padding: 16px;
   background: white;
   border-radius: 12px;
@@ -217,26 +210,81 @@ body {
   box-shadow: none;
 }
 
-.btn-download {
-  padding: 8px 16px;
-  background: var(--success-color);
-  color: white;
+.control-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1;
+  max-width: 140px;
 }
 
-.btn-download:hover:not(:disabled) {
-  background: #218838;
-  transform: translateY(-1px);
+.resume-btn {
+  background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+  color: white;
 }
 
-.btn-download:disabled {
-  background: #6c757d;
+.resume-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20c997 0%, var(--success-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+}
+
+.stop-btn {
+  background: linear-gradient(135deg, var(--error-color) 0%, #c82333 100%);
+  color: white;
+}
+
+.stop-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c82333 0%, var(--error-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+}
+
+.download-btn {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+}
+
+.restart-btn {
+  background: linear-gradient(135deg, var(--accent-color) 0%, #e67e22 100%);
+  color: white;
+}
+
+.restart-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e67e22 0%, var(--accent-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+}
+
+.control-btn:disabled {
+  background: #6c757d !important;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .progress-section {
@@ -260,8 +308,8 @@ body {
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .stat-item {
@@ -288,11 +336,11 @@ body {
 .progress-bar {
   position: relative;
   width: 100%;
-  height: 24px;
+  height: 20px;
   background: var(--border-color);
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -313,6 +361,18 @@ body {
   font-weight: 700;
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.status-message {
+  text-align: center;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-color);
+  border-left: 4px solid var(--primary-color);
 }
 
 #progress-text {
@@ -416,8 +476,15 @@ body {
   color: #721c24;
 }
 
+.processing-lists {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
 #consumer-list-container {
-  margin-bottom: 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -425,15 +492,17 @@ body {
 }
 
 #consumer-list-container h4 {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--primary-color);
   flex-shrink: 0;
+  font-size: 15px;
 }
 
 #consumer-list {
   flex: 1;
   overflow-y: auto;
   padding-right: 4px;
+  max-height: 300px;
 }
 
 #results-container {
@@ -445,14 +514,16 @@ body {
 
 #results-container h4 {
   flex-shrink: 0;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--primary-color);
+  font-size: 15px;
 }
 
 #results-list {
   flex: 1;
   overflow-y: auto;
   padding-right: 4px;
+  max-height: 300px;
 }
 
 .consumer-item {

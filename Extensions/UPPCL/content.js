@@ -1,12 +1,21 @@
 // Content script for UPPCL website interaction
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Global stop flag for content script
+let contentStopProcessing = false;
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'fetchBill') {
+    contentStopProcessing = false;
     fetchBillFromSite(request.data)
       .then(result => sendResponse(result))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Keep message channel open for async response
+  }
+  
+  if (request.action === 'stop') {
+    contentStopProcessing = true;
+    sendResponse({ success: true });
   }
   
   if (request.action === 'ping') {
@@ -18,6 +27,10 @@ async function fetchBillFromSite(data) {
   try {
     console.log('🚀 Starting bill fetch for consumer:', data.consumerNumber);
     
+    if (contentStopProcessing) {
+      return { success: false, error: 'Processing stopped by user' };
+    }
+    
     // Navigate to bill payment page if not already there
     if (!window.location.href.includes('pay_bill_home')) {
       console.log('📍 Navigating to bill payment page');
@@ -25,9 +38,17 @@ async function fetchBillFromSite(data) {
       await waitForPageLoad();
     }
 
+    if (contentStopProcessing) {
+      return { success: false, error: 'Processing stopped by user' };
+    }
+
     // Fill form fields
     console.log('📝 Filling form fields');
     await fillBillForm(data);
+    
+    if (contentStopProcessing) {
+      return { success: false, error: 'Processing stopped by user' };
+    }
     
     // Submit form and get results
     console.log('📊 Extracting bill data');
@@ -114,24 +135,7 @@ async function fillBillForm(data) {
   }
   
   // Wait for dialog and click Download Bill button
-  console.log('⏳ Waiting for OTP dialog');
-  const dialog = await waitForElement('app-validate-mobile-otp-dialog');
-  if (dialog) {
-    await delay(1000);
-    console.log('📥 Clicking Download Bill button');
-    const downloadBillButton = [...dialog.querySelectorAll('button')]
-      .find(b => b.textContent.trim() === 'Download Bill');
-    if (downloadBillButton) {
-      downloadBillButton.click();
-    }
-  }
-  
-  // Close dialog
-  console.log('❌ Waiting for close button');
-  const closeButton = await waitForElement('button[mat-dialog-close].close');
-  if (closeButton) {
-    closeButton.click();
-  }
+  //await DownloadBillFromDialog();
   
   // Wait and click Back button
   console.log('⬅️ Waiting for Back button');
@@ -143,6 +147,27 @@ async function fillBillForm(data) {
   // Wait for navigation back to home
   console.log('🏠 Navigating back to home');
   await delay(2000);
+}
+
+async function DownloadBillFromDialog() {
+  console.log('⏳ Waiting for OTP dialog');
+  const dialog = await waitForElement('app-validate-mobile-otp-dialog');
+  if (dialog) {
+    await delay(1000);
+    console.log('📥 Clicking Download Bill button');
+    const downloadBillButton = [...dialog.querySelectorAll('button')]
+      .find(b => b.textContent.trim() === 'Download Bill');
+    if (downloadBillButton) {
+      downloadBillButton.click();
+    }
+  }
+
+  // Close dialog
+  console.log('❌ Waiting for close button');
+  const closeButton = await waitForElement('button[mat-dialog-close].close');
+  if (closeButton) {
+    closeButton.click();
+  }
 }
 
 function waitForElement(selector, timeout = 10000) {

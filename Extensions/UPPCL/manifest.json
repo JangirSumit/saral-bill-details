@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "UPPCL Bill Details Fetcher",
+  "name": "UPPCL Bill Details",
   "version": "1.0",
   "description": "Fetch UPPCL bill details manually or in bulk",
   "icons": {
@@ -14,7 +14,7 @@
   ],
 
   "action": {
-    "default_title": "Open UPPCL Bill Fetcher"
+    "default_title": "Open UPPCL Bill"
   },
   "side_panel": {
     "default_path": "sidepanel.html"

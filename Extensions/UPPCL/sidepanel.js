@@ -33,20 +33,24 @@ async function loadData() {
 // Check content script connection
 async function checkConnection() {
   const statusElement = document.getElementById('connection-status');
+  const headerElement = document.querySelector('.header');
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab.url.includes('consumer.uppcl.org')) {
       statusElement.textContent = 'Navigate to UPPCL website';
       statusElement.className = 'status-disconnected';
+      headerElement.style.display = 'block';
       return;
     }
     
     await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
     statusElement.textContent = 'Connected';
     statusElement.className = 'status-connected';
+    headerElement.style.display = 'none';
   } catch (error) {
     statusElement.textContent = 'Disconnected';
     statusElement.className = 'status-disconnected';
+    headerElement.style.display = 'block';
   }
 }
 
@@ -139,6 +143,43 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('download-sample').addEventListener('click', () => {
     downloadSampleCSV();
   });
+  
+  // Stop processing
+  document.getElementById('stop-processing').addEventListener('click', async () => {
+    stopProcessing = true;
+    // Show immediate stop message
+    document.getElementById('status-message').textContent = '⏸️ Stopping processing...';
+    
+    // Immediately update button states
+    document.getElementById('stop-processing').disabled = true;
+    document.getElementById('restart-processing').disabled = false;
+    if (currentProcessIndex < currentDataArray.length - 1) {
+      document.getElementById('resume-processing').disabled = false;
+    }
+    
+    // Also stop content script processing
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      await chrome.tabs.sendMessage(tab.id, { action: 'stop' });
+    } catch (error) {
+      console.log('Could not send stop message to content script');
+    }
+  });
+  
+  // Resume processing
+  document.getElementById('resume-processing').addEventListener('click', async () => {
+    if (currentDataArray.length > 0 && currentProcessIndex < currentDataArray.length - 1) {
+      await fetchBillDetails(currentDataArray, currentProcessIndex + 1);
+    }
+  });
+  
+  // Restart processing
+  document.getElementById('restart-processing').addEventListener('click', async () => {
+    if (currentDataArray.length > 0) {
+      document.getElementById('status-message').textContent = `🔄 Restarting processing from the beginning...`;
+      await fetchBillDetails(currentDataArray, 0);
+    }
+  });
 });
 
 // Parse CSV file
@@ -190,8 +231,14 @@ function parseCSV(file) {
   });
 }
 
+// Global processing state
+let stopProcessing = false;
+let currentDataArray = [];
+let currentProcessIndex = 0;
+let isProcessing = false;
+
 // Fetch bill details
-async function fetchBillDetails(dataArray) {
+async function fetchBillDetails(dataArray, resumeFromIndex = 0) {
   // Switch to processing tab
   document.querySelector('[data-tab="processing"]').click();
   
@@ -202,16 +249,42 @@ async function fetchBillDetails(dataArray) {
   const remainingTime = document.getElementById('remaining-time');
   const consumerList = document.getElementById('consumer-list');
   const resultsList = document.getElementById('results-list');
+  const stopBtn = document.getElementById('stop-processing');
+  const resumeBtn = document.getElementById('resume-processing');
   
-  resultsList.innerHTML = '';
-  consumerList.innerHTML = '';
-  let processed = 0;
+  // Store current processing state
+  currentDataArray = dataArray;
+  currentProcessIndex = resumeFromIndex;
+  isProcessing = true;
+  
+  // Only clear if starting fresh
+  if (resumeFromIndex === 0) {
+    resultsList.innerHTML = '';
+    consumerList.innerHTML = '';
+  }
+  
+  let processed = resumeFromIndex;
   const total = dataArray.length;
   const startTime = Date.now();
   const processedData = [];
+  stopProcessing = false;
   
-  // Disable download button initially
+  // Enable stop button, disable other buttons
+  stopBtn.disabled = false;
+  resumeBtn.disabled = true;
+  document.getElementById('restart-processing').disabled = true;
   document.getElementById('download-csv').disabled = true;
+  
+  // Keep service worker alive during processing
+  chrome.runtime.sendMessage({ action: 'startProcessing' }).catch(() => {});
+  
+  // Show start message
+  const statusMessage = document.getElementById('status-message');
+  if (resumeFromIndex === 0) {
+    statusMessage.textContent = `🚀 Starting bulk processing of ${total} consumers...`;
+  } else {
+    statusMessage.textContent = `▶️ Resuming processing from consumer ${resumeFromIndex + 1} of ${total}...`;
+  }
   
   // Create consumer list items
   dataArray.forEach((data, index) => {
@@ -240,7 +313,20 @@ async function fetchBillDetails(dataArray) {
     }
   }, 1000);
 
-  for (let i = 0; i < dataArray.length; i++) {
+  for (let i = resumeFromIndex; i < dataArray.length; i++) {
+    currentProcessIndex = i;
+    
+    // Check if processing should stop
+    if (stopProcessing) {
+      console.log('🛑 Processing stopped by user');
+      // Stop service worker keepalive
+      chrome.runtime.sendMessage({ action: 'stopProcessing' }).catch(() => {});
+      
+      // Update stop message with final position
+      document.getElementById('status-message').textContent = `⏹️ Processing stopped at consumer ${i + 1} of ${total}. You can resume or restart.`;
+      break;
+    }
+    
     const data = dataArray[i];
     const consumerItem = document.getElementById(`consumer-${i}`);
     const statusSpan = consumerItem.querySelector('.consumer-status');
@@ -306,8 +392,18 @@ async function fetchBillDetails(dataArray) {
 
   clearInterval(sessionTimer);
   remainingTime.textContent = '00:00';
+  isProcessing = false;
   
-  // Enable download button
+  // Stop service worker keepalive
+  chrome.runtime.sendMessage({ action: 'stopProcessing' }).catch(() => {});
+  
+  // Show completion message
+  document.getElementById('status-message').textContent = `✅ Processing completed! ${processed} of ${total} consumers processed successfully.`;
+  
+  // Disable control buttons, enable download button
+  stopBtn.disabled = true;
+  resumeBtn.disabled = true;
+  document.getElementById('restart-processing').disabled = true;
   const downloadBtn = document.getElementById('download-csv');
   downloadBtn.disabled = false;
   downloadBtn.onclick = () => downloadProcessedCSV(processedData);

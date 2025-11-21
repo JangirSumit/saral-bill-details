@@ -8,7 +8,6 @@
 <body>
   <div class="container">
     <div class="header">
-      <h2>UPPCL Bill Details</h2>
       <div id="connection-status" class="status-disconnected">Disconnected</div>
     </div>
     
@@ -93,17 +92,29 @@
           <div class="progress-percentage" id="progress-percentage">0%</div>
         </div>
         
-        <div id="consumer-list-container">
-          <h4>Consumer Numbers:</h4>
-          <div id="consumer-list"></div>
+        <div id="status-message" class="status-message">Ready to process</div>
+        
+        <div class="control-buttons">
+          <div class="button-row">
+            <button id="restart-processing" class="control-btn restart-btn" disabled>🔄 Restart</button>
+            <button id="resume-processing" class="control-btn resume-btn" disabled>▶️ Resume</button>
+          </div>
+          <div class="button-row">
+            <button id="stop-processing" class="control-btn stop-btn" disabled>⏹️ Stop</button>
+            <button id="download-csv" class="control-btn download-btn" disabled>📥 Download CSV</button>
+          </div>
         </div>
         
-        <div id="results-container">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h4>Results:</h4>
-            <button id="download-csv" class="btn-download" disabled>Download CSV</button>
+        <div class="processing-lists">
+          <div id="consumer-list-container">
+            <h4>Consumer Numbers:</h4>
+            <div id="consumer-list"></div>
           </div>
-          <div id="results-list"></div>
+          
+          <div id="results-container">
+            <h4>Results:</h4>
+            <div id="results-list"></div>
+          </div>
         </div>
       </div>
     </div>
