@@ -117,6 +117,7 @@ class PaytmBillExtractor {
       "Consumer No",
       "Account Number",
       "Account No",
+      "Consumer ID"
     ];
     for (const labelText of consumerLabels) {
       const labels = Array.from(document.querySelectorAll("label")).filter(
@@ -172,6 +173,8 @@ class PaytmBillExtractor {
 
     return null;
   }
+
+  
 
   async setupForm(setup) {
     console.log("Setting up form with:", setup);
@@ -253,6 +256,13 @@ class PaytmBillExtractor {
     }
   }
 
+  extractBoardNameToType(boardName) {
+    if (boardName === "CESC Kolkata, West Bengal") {
+      return "CESC";
+    }
+    return boardName.includes("-") ? boardName.split("-")[0].trim() : boardName;
+  }
+
   async selectElectricityBoardFromDropdown(boardName) {
     await this.delay(1000);
 
@@ -270,9 +280,7 @@ class PaytmBillExtractor {
       await this.delay(200);
 
       // Type only the part before "-" if present
-      const textToType = boardName.includes("-")
-        ? boardName.split("-")[0].trim()
-        : boardName;
+      const textToType = this.extractBoardNameToType(boardName);
 
       await this.typeText(boardInput, textToType);
       await this.delay(1000);

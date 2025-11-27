@@ -38,6 +38,9 @@
     "CESC Kolkata, West Bengal",
     "India Power (IPCL)"
   ],
+  "billDetails": {
+    "West Bengal Electricity (WBSEDCL)": "<div class=\"_3xI1\"><ul><li><span>Bill Payment</span></li><li><span>Meter Recharge</span></li></ul></div>"
+  },
   "Rajasthan": [
     "Jaipur Vidyut Vitran (JVVNL)",
     "Ajmer Vidyut Vitran (AVVNL)",
@@ -64,6 +67,12 @@
     "Assam Power (APDCL)"
   ],
   "districts": {
+    "West Bengal": {
+      "West Bengal Electricity (WBSEDCL)": [
+        "Bill Payment",
+        "Meter Recharge"
+      ]
+    },
     "Uttar Pradesh": {
       "Uttar Pradesh Power (UPPCL)": [
         "Agra - DVVNL",

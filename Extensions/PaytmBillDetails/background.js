@@ -176,6 +176,7 @@ async function typeWithKeyboardEvents(tabId, selector, text) {
         if (!inputEl && '${selector}'.includes('input[type="text"]')) {
           const inputs = document.querySelectorAll('${selector}');
           inputEl = Array.from(inputs).find(el => el.offsetParent !== null && !el.disabled);
+          console.log('Found input element for selector:', '${selector}', inputEl);
         }
         if (inputEl) {
           inputEl.focus();
