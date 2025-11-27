@@ -49,6 +49,8 @@ class PaytmBillExtractor {
     // Fill consumer number in the form
     await this.fillConsumerNumber(consumerNumber);
 
+    await this.fillMobileNumber();
+
     // Click proceed button
     await this.clickProceedButton();
 
@@ -117,7 +119,7 @@ class PaytmBillExtractor {
       "Consumer No",
       "Account Number",
       "Account No",
-      "Consumer ID"
+      "Consumer ID",
     ];
     for (const labelText of consumerLabels) {
       const labels = Array.from(document.querySelectorAll("label")).filter(
@@ -174,7 +176,28 @@ class PaytmBillExtractor {
     return null;
   }
 
-  
+  findMobileInput() {
+    // Look for consumer number input field, avoiding State and Electricity Board fields
+    let input = null;
+
+    // Find by label containing "Consumer Number" or similar terms
+    const consumerLabels = ["Mobile Number", "Mobile No"];
+    for (const labelText of consumerLabels) {
+      const labels = Array.from(document.querySelectorAll("label")).filter(
+        (label) => label.textContent.trim().includes(labelText)
+      );
+
+      for (const label of labels) {
+        const parent = label.parentElement;
+        if (parent) {
+          input = parent.querySelector('input[type="text"]');
+          if (input && input.offsetParent !== null) return input;
+        }
+      }
+    }
+
+    return null;
+  }
 
   async setupForm(setup) {
     console.log("Setting up form with:", setup);
@@ -285,15 +308,15 @@ class PaytmBillExtractor {
       await this.typeText(boardInput, textToType);
       await this.delay(1000);
 
-      const boardOption = Array.from(boardInput.parentElement.querySelectorAll("li")).find(
-        (li) => li.textContent.includes(boardName)
-      );
+      const boardOption = Array.from(
+        boardInput.parentElement.querySelectorAll("li")
+      ).find((li) => li.textContent.includes(boardName));
 
       if (boardOption) {
-        console.log('Found board option:', boardOption);
+        console.log("Found board option:", boardOption);
         try {
           const selector = this.getElementSelector(boardOption);
-          console.log('Generated selector:', selector);
+          console.log("Generated selector:", selector);
           await this.sendTrustedClick(selector);
           console.log("Selected electricity board:", boardName);
         } catch (error) {
@@ -328,30 +351,39 @@ class PaytmBillExtractor {
     });
 
     if (districtInput && districtName) {
-      console.log('Found district input, clicking to open dropdown');
+      console.log("Found district input, clicking to open dropdown");
       districtInput.focus();
       districtInput.click();
       await this.delay(1000);
 
       // Look for district option in spans within the district dropdown area
       // Find the dropdown container first
-      const dropdownContainer = districtInput.closest('li') || districtInput.parentElement;
-      const districtSpans = dropdownContainer ? 
-        Array.from(dropdownContainer.querySelectorAll('span')) :
-        Array.from(document.querySelectorAll('span'));
-      
+      const dropdownContainer =
+        districtInput.closest("li") || districtInput.parentElement;
+      const districtSpans = dropdownContainer
+        ? Array.from(dropdownContainer.querySelectorAll("span"))
+        : Array.from(document.querySelectorAll("span"));
+
       const districtOption = districtSpans.find(
         (span) => span.textContent.trim() === districtName
       );
 
       if (districtOption) {
-        console.log('Found district option:', districtOption, 'Text:', districtOption.textContent);
+        console.log(
+          "Found district option:",
+          districtOption,
+          "Text:",
+          districtOption.textContent
+        );
         try {
           // Use regular click first as it's more reliable for span elements
           districtOption.click();
           console.log("Selected district:", districtName);
         } catch (error) {
-          console.log("Regular click failed, trying trusted click:", error.message);
+          console.log(
+            "Regular click failed, trying trusted click:",
+            error.message
+          );
           try {
             const selector = this.getElementSelector(districtOption);
             await this.sendTrustedClick(selector);
@@ -362,7 +394,10 @@ class PaytmBillExtractor {
         await this.delay(1000);
       } else {
         console.log("District option not found:", districtName);
-        console.log('Available district options:', districtSpans.map(s => s.textContent.trim()));
+        console.log(
+          "Available district options:",
+          districtSpans.map((s) => s.textContent.trim())
+        );
       }
     } else {
       console.log("District input not found or no district name provided");
@@ -371,11 +406,11 @@ class PaytmBillExtractor {
 
   async typeText(input, text) {
     const selector = this.getElementSelector(input);
-    console.log('Generated selector for input:', selector, 'Element:', input);
+    console.log("Generated selector for input:", selector, "Element:", input);
     try {
       await this.typeWithTrustedEvents(selector, text);
     } catch (error) {
-      console.log('Trusted typing failed, using fallback:', error.message);
+      console.log("Trusted typing failed, using fallback:", error.message);
       input.focus();
       input.value = text;
       input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -396,6 +431,27 @@ class PaytmBillExtractor {
     input.focus();
     input.value = "";
     input.value = consumerNumber;
+
+    // Trigger input events
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+
+    await this.delay(500);
+  }
+
+  async fillMobileNumber() {
+    const input = this.findMobileInput();
+
+    if (!input) {
+      throw new Error("Consumer number input field not found");
+    }
+
+    console.log("Found consumer number input:", input);
+
+    // Clear and fill the input
+    input.focus();
+    input.value = "";
+    input.value = "9876543210";
 
     // Trigger input events
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -436,7 +492,9 @@ class PaytmBillExtractor {
     await this.waitForBillDetails();
 
     const billDetails = {
-      name: this.extractFieldValue("Consumer Name") || this.extractFieldValue("Name"),
+      name:
+        this.extractFieldValue("Consumer Name") ||
+        this.extractFieldValue("Name"),
       dueDate: this.extractFieldValue("Due Date"),
       billAmount: this.extractAmountFromTextbox(),
       billNumber: this.extractFieldValue("Bill Number"),
@@ -478,7 +536,11 @@ class PaytmBillExtractor {
     for (const labelDiv of labelDivs) {
       // Look for the value in the next sibling div
       const nextSibling = labelDiv.nextElementSibling;
-      if (nextSibling && nextSibling.textContent.trim() && nextSibling.textContent.trim() !== fieldName) {
+      if (
+        nextSibling &&
+        nextSibling.textContent.trim() &&
+        nextSibling.textContent.trim() !== fieldName
+      ) {
         return nextSibling.textContent.trim();
       }
 
@@ -489,7 +551,11 @@ class PaytmBillExtractor {
         const labelIndex = allDivs.indexOf(labelDiv);
         if (labelIndex >= 0 && labelIndex + 1 < allDivs.length) {
           const valueDiv = allDivs[labelIndex + 1];
-          if (valueDiv && valueDiv.textContent.trim() && valueDiv.textContent.trim() !== fieldName) {
+          if (
+            valueDiv &&
+            valueDiv.textContent.trim() &&
+            valueDiv.textContent.trim() !== fieldName
+          ) {
             return valueDiv.textContent.trim();
           }
         }
@@ -497,7 +563,11 @@ class PaytmBillExtractor {
 
       // Look for the value in parent's next sibling
       const parentNext = labelDiv.parentElement?.nextElementSibling;
-      if (parentNext && parentNext.textContent.trim() && parentNext.textContent.trim() !== fieldName) {
+      if (
+        parentNext &&
+        parentNext.textContent.trim() &&
+        parentNext.textContent.trim() !== fieldName
+      ) {
         return parentNext.textContent.trim();
       }
     }
@@ -562,20 +632,20 @@ class PaytmBillExtractor {
 
   getElementSelector(element) {
     if (element.id) return `#${element.id}`;
-    
+
     // For input elements, use attribute-based selectors
-    if (element.tagName.toLowerCase() === 'input') {
+    if (element.tagName.toLowerCase() === "input") {
       if (element.type) {
         return `input[type="${element.type}"]`;
       }
     }
-    
+
     // Use textContent for li elements only
     const text = element.textContent?.trim();
-    if (text && element.tagName.toLowerCase() === 'li') {
+    if (text && element.tagName.toLowerCase() === "li") {
       return `li:contains('${text.replace(/'/g, "\\'")}')`;
     }
-    
+
     // Fallback to class-based selector
     if (element.className) {
       const firstClass = element.className.split(" ")[0];
@@ -595,7 +665,7 @@ class PaytmBillExtractor {
   extractAmountFromTextbox() {
     // Look for div containing "Amount (Rs.)" text and extract span value
     const allDivs = Array.from(document.querySelectorAll("div"));
-    
+
     for (const div of allDivs) {
       if (div.textContent && div.textContent.includes("Amount (Rs.)")) {
         const span = div.querySelector("span");
@@ -604,23 +674,25 @@ class PaytmBillExtractor {
         }
       }
     }
-    
+
     // Fallback to original method - look for Amount input textbox
-    const consumerDetailsDiv = Array.from(document.querySelectorAll("div")).find(
-      (el) => el.textContent.includes("Consumer Details")
-    );
-    
+    const consumerDetailsDiv = Array.from(
+      document.querySelectorAll("div")
+    ).find((el) => el.textContent.includes("Consumer Details"));
+
     if (consumerDetailsDiv) {
-      const amountInput = Array.from(document.querySelectorAll('input[type="text"]')).find((input) => {
+      const amountInput = Array.from(
+        document.querySelectorAll('input[type="text"]')
+      ).find((input) => {
         const label = input.parentElement?.querySelector("label");
         return label && label.textContent.trim().includes("Amount");
       });
-      
+
       if (amountInput && amountInput.value) {
         return amountInput.value.trim();
       }
     }
-    
+
     return null;
   }
 
