@@ -217,13 +217,49 @@ class PaytmBillExtractor {
       await this.selectElectricityBoardFromDropdown(setup.board);
     }
 
-    // 4. Select district/type if provided
-    if (setup.district) {
-      await this.selectDistrictFromDropdown(setup.district);
-    }
+    // 4. Handle district selection
+    await this.handleDistrictSelection(setup);
 
     // 5. Wait for form to fully load after selections
     await this.delay(2000);
+  }
+
+  async handleDistrictSelection(setup) {
+    console.log("handleDistrictSelection called with setup:", setup);
+    let districtToUse = null;
+    
+    if (setup.inputMethod === 'csv' && setup.district) {
+      // For CSV bulk upload, use district from CSV data
+      districtToUse = setup.district;
+      console.log("Using district from CSV:", districtToUse);
+    } else {
+      // For single entry, get district from UI sidepanel
+      districtToUse = await this.getDistrictFromUI();
+      console.log("Using district from UI:", districtToUse);
+    }
+    
+    if (districtToUse) {
+      await this.selectDistrictFromDropdown(districtToUse);
+    } else {
+      console.log("No district to use - setup.inputMethod:", setup.inputMethod, "setup.district:", setup.district);
+    }
+  }
+
+  async getDistrictFromUI() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: "getSelectedDistrict" },
+        (response) => {
+          if (response && response.success && response.district) {
+            console.log("Got district from UI:", response.district);
+            resolve(response.district);
+          } else {
+            console.log("No district selected in UI");
+            resolve(null);
+          }
+        }
+      );
+    });
   }
 
   async selectElectricityBoardsRadio() {

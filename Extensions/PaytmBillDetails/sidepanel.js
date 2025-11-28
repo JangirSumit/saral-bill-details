@@ -416,6 +416,10 @@ class BillProcessor {
         // Strip parenthetical abbreviations from board name
         setup.board = consumer.board.replace(/\s*\([^)]*\)\s*$/, '').trim();
       }
+      if (consumer.district) {
+        setup.district = consumer.district;
+      }
+      console.log('Setup configuration for consumer:', setup);
       
       // Send message to content script to fill form and get bill details
       const result = await this.sendToContentScript({
@@ -787,6 +791,9 @@ class BillProcessor {
     let board = document.getElementById('boardInput')?.value || '';
     const district = document.getElementById('districtInput')?.value || '';
     
+    // Determine input method based on current mode
+    const inputMethod = document.querySelector('input[name="mode"]:checked')?.value === 'bulk' ? 'csv' : 'single';
+    
     // Strip parenthetical abbreviations from board name
     if (board) {
       board = board.replace(/\s*\([^)]*\)\s*$/, '').trim();
@@ -796,7 +803,8 @@ class BillProcessor {
       serviceType: serviceType,
       state: state,
       board: board,
-      district: district
+      district: district,
+      inputMethod: inputMethod
     };
   }
 
